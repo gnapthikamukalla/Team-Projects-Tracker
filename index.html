@@ -1,2819 +1,5402 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
+
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width,initial-scale=1.0">
+
+<meta name="viewport"
+      content="width=device-width, initial-scale=1.0">
 
 <title>Team Project Tracker</title>
 
+<!-- Supabase -->
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 
+<!-- Excel export -->
+<script src="https://cdn.sheetjs.com/xlsx-0.20.3/package/dist/xlsx.full.min.js"></script>
+
+
 <style>
-*{box-sizing:border-box}
+
+/* =====================================================
+   GENERAL
+===================================================== */
+
+*{
+    box-sizing:border-box;
+}
 
 body{
     margin:0;
     font-family:Arial,Helvetica,sans-serif;
     background:#f5f7fb;
-    color:#172033
-}
-
-.header{
-    height:65px;
-    background:#fff;
-    border-bottom:1px solid #ddd;
-    display:flex;
-    align-items:center;
-    justify-content:space-between;
-    padding:0 25px;
-}
-
-.logo{
-    font-size:21px;
-    font-weight:bold
-}
-
-.logo span{color:#315efb}
-
-.container{
-    display:flex;
-    min-height:calc(100vh - 65px)
-}
-
-.sidebar{
-    width:230px;
-    background:#111827;
-    color:#cbd5e1;
-    padding:20px 12px;
-}
-
-.menu{
-    padding:12px;
-    border-radius:7px;
-    cursor:pointer;
-    margin-bottom:5px;
-}
-
-.menu:hover,.menu.active{
-    background:#263247;
-    color:#fff
-}
-
-.main{
-    flex:1;
-    padding:25px;
-    overflow:auto
-}
-
-.page{display:none}
-.page.active{display:block}
-
-.page-title{
-    display:flex;
-    justify-content:space-between;
-    align-items:center;
-    margin-bottom:20px
-}
-
-.page-title h1{margin:0}
-
-.subtitle{
-    color:#6b7280;
-    margin-top:5px
+    color:#172033;
 }
 
 button{
-    border:0;
+    border:none;
     border-radius:7px;
     padding:9px 14px;
     cursor:pointer;
-    font-weight:600
+    font-weight:600;
 }
 
-.primary{
-    background:#315efb;
-    color:white
+button:hover{
+    opacity:.9;
 }
 
-.secondary{
-    background:#eef2ff;
-    color:#2447c8
-}
-
-.danger{
-    background:#fee2e2;
-    color:#991b1b
-}
-
-.cards{
-    display:grid;
-    grid-template-columns:repeat(5,1fr);
-    gap:15px
-}
-
-.card{
-    background:#fff;
-    border:1px solid #e5e7eb;
-    border-radius:12px;
-    padding:18px
-}
-
-.card-title{
-    color:#6b7280;
-    font-size:14px
-}
-
-.card-number{
-    font-size:29px;
-    font-weight:bold;
-    margin-top:8px
-}
-
-.green{color:#16a34a}
-.orange{color:#d97706}
-.red{color:#dc2626}
-
-.panel{
-    background:#fff;
-    border:1px solid #e5e7eb;
-    border-radius:12px;
-    padding:20px;
-    margin-top:20px
-}
-
-.project-card{
-    background:#fff;
-    border:1px solid #e5e7eb;
-    border-radius:12px;
-    padding:20px;
-    margin-bottom:18px
-}
-
-.project-header{
-    display:flex;
-    justify-content:space-between;
-    align-items:flex-start;
-    gap:15px
-}
-
-.activity{
-    border:1px solid #e5e7eb;
-    border-radius:9px;
-    padding:15px;
-    margin-top:15px
-}
-
-.task{
-    display:flex;
-    align-items:center;
-    gap:10px;
-    padding:10px 0;
-    border-bottom:1px solid #eee
-}
-
-.task:last-child{border-bottom:0}
-
-.badge{
-    padding:4px 8px;
-    border-radius:15px;
-    font-size:12px;
-    font-weight:bold;
-    white-space:nowrap
-}
-
-.completed{
-    background:#dcfce7;
-    color:#166534
-}
-
-.pending{
-    background:#fef3c7;
-    color:#92400e
-}
-
-.overdue{
-    background:#fee2e2;
-    color:#991b1b
-}
-
-.person{
-    color:#315efb;
-    font-weight:bold;
-    cursor:pointer
-}
-
-.progress{
-    height:10px;
-    background:#e5e7eb;
-    border-radius:10px;
-    overflow:hidden;
-    margin-top:8px
-}
-
-.progress-bar{
-    height:100%;
-    background:#315efb;
-    transition:width .3s
-}
-
-.small-progress{
-    height:7px
-}
-
-.empty{
-    text-align:center;
-    padding:35px;
-    color:#6b7280
-}
-
-.actions{
-    display:flex;
-    gap:7px;
-    flex-wrap:wrap
-}
-
-.modal{
-    display:none;
-    position:fixed;
-    inset:0;
-    background:rgba(0,0,0,.5);
-    align-items:center;
-    justify-content:center;
-    z-index:100
-}
-
-.modal.show{display:flex}
-
-.modal-box{
-    background:#fff;
-    width:650px;
-    max-width:95%;
-    max-height:90vh;
-    overflow:auto;
-    border-radius:12px;
-    padding:25px
-}
-
-.form-group{margin-top:15px}
-
-.form-group label{
-    display:block;
-    font-weight:bold;
-    font-size:13px;
-    margin-bottom:6px
-}
-
-input,select,textarea{
+input,
+select,
+textarea{
     width:100%;
     padding:10px;
     border:1px solid #d1d5db;
-    border-radius:7px
+    border-radius:7px;
+    font-size:14px;
+    background:white;
 }
 
-.modal-buttons{
-    display:flex;
-    justify-content:flex-end;
-    gap:10px;
-    margin-top:20px
+textarea{
+    min-height:80px;
+    resize:vertical;
 }
 
-.bar-row{
-    display:grid;
-    grid-template-columns:100px 1fr 50px;
-    gap:10px;
-    align-items:center;
-    margin:15px 0
-}
 
-.bar{
-    height:22px;
-    background:#edf0f5;
-    border-radius:5px;
-    overflow:hidden;
-    cursor:pointer
-}
+/* =====================================================
+   HEADER
+===================================================== */
 
-.bar-green{height:100%;background:#16a34a}
-.bar-orange{height:100%;background:#d97706}
-.bar-red{height:100%;background:#dc2626}
+.header{
 
-table{
-    width:100%;
-    border-collapse:collapse
-}
+    height:65px;
 
-th,td{
-    padding:12px 10px;
+    background:white;
+
     border-bottom:1px solid #e5e7eb;
-    text-align:left
+
+    display:flex;
+
+    align-items:center;
+
+    justify-content:space-between;
+
+    padding:0 25px;
+
+    position:sticky;
+
+    top:0;
+
+    z-index:20;
 }
 
-th{
+.logo{
+
+    font-size:21px;
+
+    font-weight:bold;
+}
+
+.logo span{
+
+    color:#315efb;
+}
+
+
+/* =====================================================
+   LAYOUT
+===================================================== */
+
+.container{
+
+    display:flex;
+
+    min-height:calc(100vh - 65px);
+}
+
+.sidebar{
+
+    width:230px;
+
+    background:#111827;
+
+    color:#cbd5e1;
+
+    padding:20px 12px;
+
+    flex-shrink:0;
+}
+
+.menu{
+
+    padding:12px;
+
+    border-radius:7px;
+
+    cursor:pointer;
+
+    margin-bottom:5px;
+}
+
+.menu:hover,
+.menu.active{
+
+    background:#263247;
+
+    color:white;
+}
+
+.main{
+
+    flex:1;
+
+    padding:25px;
+
+    overflow:auto;
+}
+
+.page{
+
+    display:none;
+}
+
+.page.active{
+
+    display:block;
+}
+
+
+/* =====================================================
+   PAGE TITLE
+===================================================== */
+
+.page-title{
+
+    display:flex;
+
+    justify-content:space-between;
+
+    align-items:center;
+
+    gap:15px;
+
+    margin-bottom:20px;
+}
+
+.page-title h1{
+
+    margin:0;
+
+    font-size:28px;
+}
+
+.subtitle{
+
     color:#6b7280;
-    font-size:12px
+
+    margin-top:5px;
+
+    font-size:14px;
+}
+
+
+/* =====================================================
+   BUTTONS
+===================================================== */
+
+.primary{
+
+    background:#315efb;
+
+    color:white;
+}
+
+.secondary{
+
+    background:#eef2ff;
+
+    color:#2447c8;
+}
+
+.danger{
+
+    background:#fee2e2;
+
+    color:#991b1b;
+}
+
+.success{
+
+    background:#dcfce7;
+
+    color:#166534;
+}
+
+.actions{
+
+    display:flex;
+
+    gap:7px;
+
+    flex-wrap:wrap;
+}
+
+
+/* =====================================================
+   DASHBOARD CARDS
+===================================================== */
+
+.cards{
+
+    display:grid;
+
+    grid-template-columns:
+        repeat(5,1fr);
+
+    gap:15px;
+}
+
+.card{
+
+    background:white;
+
+    border:1px solid #e5e7eb;
+
+    border-radius:12px;
+
+    padding:18px;
+}
+
+.card-title{
+
+    color:#6b7280;
+
+    font-size:14px;
+}
+
+.card-number{
+
+    font-size:29px;
+
+    font-weight:bold;
+
+    margin-top:8px;
+}
+
+.green{
+
+    color:#16a34a;
+}
+
+.orange{
+
+    color:#d97706;
+}
+
+.red{
+
+    color:#dc2626;
+}
+
+
+/* =====================================================
+   PANELS
+===================================================== */
+
+.panel{
+
+    background:white;
+
+    border:1px solid #e5e7eb;
+
+    border-radius:12px;
+
+    padding:20px;
+
+    margin-top:20px;
+}
+
+
+/* =====================================================
+   PROJECT
+===================================================== */
+
+.project-card{
+
+    background:white;
+
+    border:1px solid #dfe3eb;
+
+    border-radius:12px;
+
+    padding:20px;
+
+    margin-bottom:18px;
+}
+
+.project-header{
+
+    display:flex;
+
+    justify-content:space-between;
+
+    align-items:flex-start;
+
+    gap:15px;
+}
+
+.project-title{
+
+    font-size:21px;
+
+    font-weight:bold;
+
+    margin-bottom:7px;
+}
+
+.project-meta{
+
+    color:#6b7280;
+
+    font-size:14px;
+}
+
+
+/* =====================================================
+   PROGRESS
+===================================================== */
+
+.progress{
+
+    height:10px;
+
+    background:#e5e7eb;
+
+    border-radius:10px;
+
+    overflow:hidden;
+
+    margin-top:8px;
+}
+
+.progress-bar{
+
+    height:100%;
+
+    background:#315efb;
+
+    transition:width .3s;
+}
+
+.small-progress{
+
+    height:7px;
+}
+
+
+/* =====================================================
+   STATUS BADGES
+===================================================== */
+
+.badge{
+
+    display:inline-block;
+
+    padding:4px 9px;
+
+    border-radius:15px;
+
+    font-size:12px;
+
+    font-weight:bold;
+
+    white-space:nowrap;
+}
+
+.badge-completed{
+
+    background:#dcfce7;
+
+    color:#166534;
+}
+
+.badge-pending{
+
+    background:#fef3c7;
+
+    color:#92400e;
+}
+
+.badge-overdue{
+
+    background:#fee2e2;
+
+    color:#991b1b;
+}
+
+
+/* =====================================================
+   ACTIVITY
+===================================================== */
+
+.activity{
+
+    border:1px solid #dfe3eb;
+
+    border-radius:10px;
+
+    padding:18px;
+
+    margin-top:16px;
+
+    background:#fafbfe;
+}
+
+.activity-header{
+
+    display:flex;
+
+    justify-content:space-between;
+
+    align-items:flex-start;
+
+    gap:15px;
+}
+
+.activity-name{
+
+    font-size:17px;
+
+    font-weight:bold;
+
+    margin-bottom:6px;
+}
+
+.activity-info{
+
+    color:#6b7280;
+
+    font-size:13px;
+
+    line-height:1.6;
 }
 
 .weight{
+
     color:#6b7280;
-    font-size:12px
+
+    font-size:12px;
+
+    margin-top:4px;
 }
 
-.clickable{cursor:pointer}
 
-@media(max-width:900px){
-    .cards{grid-template-columns:repeat(2,1fr)}
+/* =====================================================
+   TASK LIST
+===================================================== */
+
+.task-list{
+
+    margin-top:16px;
+
+    border-top:1px solid #e5e7eb;
+
+    background:white;
+
+    border-radius:8px;
+
+    overflow:hidden;
+}
+
+.task-list-title{
+
+    padding:11px 12px;
+
+    font-size:13px;
+
+    font-weight:bold;
+
+    color:#6b7280;
+
+    background:#f8fafc;
+
+    border-bottom:1px solid #e5e7eb;
+}
+
+.task-row{
+
+    display:grid;
+
+    grid-template-columns:
+        30px
+        minmax(180px,2fr)
+        minmax(120px,1fr)
+        120px
+        100px
+        105px
+        auto;
+
+    gap:10px;
+
+    align-items:center;
+
+    padding:13px 12px;
+
+    border-bottom:1px solid #edf0f4;
+
+    background:white;
+}
+
+.task-row:last-child{
+
+    border-bottom:none;
+}
+
+.task-row:hover{
+
+    background:#fafcff;
+}
+
+.task-name{
+
+    font-weight:600;
+
+    line-height:1.35;
+}
+
+.task-person{
+
+    color:#315efb;
+
+    font-weight:600;
+
+    cursor:pointer;
+}
+
+.task-date{
+
+    color:#555;
+
+    font-size:13px;
+}
+
+.task-weight{
+
+    color:#777;
+
+    font-size:12px;
+}
+
+.task-actions{
+
+    display:flex;
+
+    gap:5px;
+}
+
+
+/* =====================================================
+   PEOPLE
+===================================================== */
+
+.person{
+
+    color:#315efb;
+
+    font-weight:bold;
+
+    cursor:pointer;
+}
+
+
+/* =====================================================
+   BAR GRAPH
+===================================================== */
+
+.bar-row{
+
+    display:grid;
+
+    grid-template-columns:
+        100px
+        1fr
+        50px;
+
+    gap:10px;
+
+    align-items:center;
+
+    margin:15px 0;
+}
+
+.bar{
+
+    height:23px;
+
+    background:#edf0f5;
+
+    border-radius:5px;
+
+    overflow:hidden;
+
+    cursor:pointer;
+}
+
+.bar-green{
+
+    height:100%;
+
+    background:#16a34a;
+}
+
+.bar-orange{
+
+    height:100%;
+
+    background:#d97706;
+}
+
+.bar-red{
+
+    height:100%;
+
+    background:#dc2626;
+}
+
+
+/* =====================================================
+   TABLE
+===================================================== */
+
+.table-container{
+
+    overflow-x:auto;
+}
+
+table{
+
+    width:100%;
+
+    border-collapse:collapse;
+}
+
+th,
+td{
+
+    padding:12px 10px;
+
+    border-bottom:1px solid #e5e7eb;
+
+    text-align:left;
+
+    font-size:14px;
+}
+
+th{
+
+    color:#6b7280;
+
+    font-size:12px;
+
+    text-transform:uppercase;
+}
+
+
+/* =====================================================
+   EMPTY
+===================================================== */
+
+.empty{
+
+    text-align:center;
+
+    padding:35px;
+
+    color:#6b7280;
+}
+
+
+/* =====================================================
+   MODAL
+===================================================== */
+
+.modal{
+
+    display:none;
+
+    position:fixed;
+
+    inset:0;
+
+    background:rgba(0,0,0,.5);
+
+    align-items:center;
+
+    justify-content:center;
+
+    z-index:100;
+}
+
+.modal.show{
+
+    display:flex;
+}
+
+.modal-box{
+
+    background:white;
+
+    width:650px;
+
+    max-width:95%;
+
+    max-height:90vh;
+
+    overflow:auto;
+
+    border-radius:12px;
+
+    padding:25px;
+}
+
+.modal-box h2{
+
+    margin-top:0;
+}
+
+.form-group{
+
+    margin-top:15px;
+}
+
+.form-group label{
+
+    display:block;
+
+    font-weight:bold;
+
+    font-size:13px;
+
+    margin-bottom:6px;
+}
+
+.modal-buttons{
+
+    display:flex;
+
+    justify-content:flex-end;
+
+    gap:10px;
+
+    margin-top:22px;
+}
+
+
+/* =====================================================
+   MOBILE
+===================================================== */
+
+@media(max-width:1000px){
+
+    .cards{
+
+        grid-template-columns:
+            repeat(2,1fr);
+    }
+
+    .task-row{
+
+        grid-template-columns:
+            30px
+            1fr
+            100px
+            90px;
+    }
+
+    .task-person,
+    .task-date,
+    .task-weight{
+
+        font-size:12px;
+    }
 }
 
 @media(max-width:650px){
-    .sidebar{display:none}
-    .main{padding:15px}
-    .cards{grid-template-columns:1fr}
-    .project-header{flex-direction:column}
+
+    .sidebar{
+
+        display:none;
+    }
+
+    .main{
+
+        padding:15px;
+    }
+
+    .cards{
+
+        grid-template-columns:1fr;
+    }
+
+    .project-header,
+    .activity-header{
+
+        flex-direction:column;
+    }
+
+    .page-title{
+
+        flex-direction:column;
+
+        align-items:flex-start;
+    }
+
+    .task-row{
+
+        grid-template-columns:
+            25px
+            1fr;
+    }
+
+    .task-row > *:not(:first-child){
+
+        grid-column:2;
+    }
 }
+
 </style>
+
 </head>
+
 
 <body>
 
+
+<!-- =====================================================
+     HEADER
+===================================================== -->
+
 <header class="header">
 
-<div class="logo">
-Team <span>Project Tracker</span>
-</div>
+    <div class="logo">
+        Team <span>Project Tracker</span>
+    </div>
 
-<button class="primary" onclick="openProjectModal()">
-+ Add Project
-</button>
+    <button
+        class="primary"
+        onclick="openProjectModal()">
+
+        + Add Project
+
+    </button>
 
 </header>
 
+
 <div class="container">
+
+
+<!-- =====================================================
+     SIDEBAR
+===================================================== -->
 
 <aside class="sidebar">
 
-<div class="menu active"
-onclick="showPage('dashboard',this)">
-Dashboard
-</div>
+    <div
+        class="menu active"
+        onclick="showPage('dashboard',this)">
 
-<div class="menu"
-onclick="showPage('projects',this)">
-Projects & Activities
-</div>
+        Dashboard
 
-<div class="menu"
-onclick="showPage('people',this)">
-Responsibility Dashboard
-</div>
+    </div>
 
-<div class="menu"
-onclick="showPage('tasks',this)">
-All Tasks
-</div>
+
+    <div
+        class="menu"
+        onclick="showPage('projects',this)">
+
+        Projects & Activities
+
+    </div>
+
+
+    <div
+        class="menu"
+        onclick="showPage('people',this)">
+
+        Responsibility Dashboard
+
+    </div>
+
+
+    <div
+        class="menu"
+        onclick="showPage('tasks',this)">
+
+        All Tasks
+
+    </div>
 
 </aside>
 
+
+<!-- =====================================================
+     MAIN
+===================================================== -->
+
 <main class="main">
 
-<!-- DASHBOARD -->
 
-<section id="dashboard" class="page active">
+<!-- =====================================================
+     DASHBOARD
+===================================================== -->
 
-<div class="page-title">
+<section
+    id="dashboard"
+    class="page active">
 
-<div>
-<h1>Dashboard</h1>
-<div class="subtitle">
-Overall project progress and task monitoring
-</div>
-</div>
 
-</div>
+    <div class="page-title">
 
-<div class="cards">
+        <div>
 
-<div class="card">
-<div class="card-title">Projects</div>
-<div class="card-number" id="totalProjects">0</div>
-</div>
+            <h1>Dashboard</h1>
 
-<div class="card">
-<div class="card-title">Total Tasks</div>
-<div class="card-number" id="totalTasks">0</div>
-</div>
+            <div class="subtitle">
 
-<div class="card">
-<div class="card-title">Completed</div>
-<div class="card-number green" id="completedTasks">0</div>
-</div>
+                Overall project progress and task monitoring
 
-<div class="card">
-<div class="card-title">Pending</div>
-<div class="card-number orange" id="pendingTasks">0</div>
-</div>
+            </div>
 
-<div class="card">
-<div class="card-title">Overdue</div>
-<div class="card-number red" id="overdueTasks">0</div>
-</div>
+        </div>
 
-</div>
 
-<div class="panel">
+        <button
+            class="primary"
+            onclick="exportToExcel()">
 
-<h3>Project Progress</h3>
+            ↓ Export to Excel
 
-<div id="projectProgress"></div>
+        </button>
 
-</div>
+    </div>
+
+
+    <div class="cards">
+
+
+        <div class="card">
+
+            <div class="card-title">
+                Projects
+            </div>
+
+            <div
+                class="card-number"
+                id="totalProjects">
+
+                0
+
+            </div>
+
+        </div>
+
+
+        <div class="card">
+
+            <div class="card-title">
+                Total Tasks
+            </div>
+
+            <div
+                class="card-number"
+                id="totalTasks">
+
+                0
+
+            </div>
+
+        </div>
+
+
+        <div class="card">
+
+            <div class="card-title">
+                Completed
+            </div>
+
+            <div
+                class="card-number green"
+                id="completedTasks">
+
+                0
+
+            </div>
+
+        </div>
+
+
+        <div class="card">
+
+            <div class="card-title">
+                Pending
+            </div>
+
+            <div
+                class="card-number orange"
+                id="pendingTasks">
+
+                0
+
+            </div>
+
+        </div>
+
+
+        <div class="card">
+
+            <div class="card-title">
+                Overdue
+            </div>
+
+            <div
+                class="card-number red"
+                id="overdueTasks">
+
+                0
+
+            </div>
+
+        </div>
+
+    </div>
+
+
+    <div class="panel">
+
+        <h3>
+            Project Progress
+        </h3>
+
+        <div id="projectProgress">
+
+        </div>
+
+    </div>
+
 
 </section>
 
 
-<!-- PROJECTS -->
+<!-- =====================================================
+     PROJECTS
+===================================================== -->
 
-<section id="projects" class="page">
+<section
+    id="projects"
+    class="page">
 
-<div class="page-title">
 
-<div>
-<h1>Projects & Activities</h1>
+    <div class="page-title">
 
-<div class="subtitle">
-Project → Activity → Task
-</div>
-</div>
+        <div>
 
-<button class="primary"
-onclick="openProjectModal()">
-+ Add Project
-</button>
+            <h1>
+                Projects & Activities
+            </h1>
 
-</div>
+            <div class="subtitle">
 
-<div id="projectList"></div>
+                Project → Activity → Task
+
+            </div>
+
+        </div>
+
+
+        <button
+            class="primary"
+            onclick="openProjectModal()">
+
+            + Add Project
+
+        </button>
+
+    </div>
+
+
+    <div id="projectList">
+
+    </div>
+
 
 </section>
 
 
-<!-- PEOPLE -->
+<!-- =====================================================
+     PEOPLE
+===================================================== -->
 
-<section id="people" class="page">
+<section
+    id="people"
+    class="page">
 
-<div class="page-title">
 
-<div>
-<h1>Responsibility Dashboard</h1>
+    <div class="page-title">
 
-<div class="subtitle">
-Click a person's name to view their task status
-</div>
+        <div>
 
-</div>
+            <h1>
+                Responsibility Dashboard
+            </h1>
 
-</div>
+            <div class="subtitle">
 
-<div class="panel">
+                Click a person's name or bar to see their tasks
 
-<div id="peopleTable"></div>
+            </div>
 
-</div>
+        </div>
 
-<div class="panel" id="personDetails">
+    </div>
 
-<div class="empty">
-Select a responsible person.
-</div>
 
-</div>
+    <div class="panel">
+
+        <div id="peopleTable">
+
+        </div>
+
+    </div>
+
+
+    <div
+        class="panel"
+        id="personDetails">
+
+        <div class="empty">
+
+            Select a responsible person.
+
+        </div>
+
+    </div>
+
+
+</section>
+
+
+<!-- =====================================================
+     ALL TASKS
+===================================================== -->
+
+<section
+    id="tasks"
+    class="page">
+
+
+    <div class="page-title">
+
+        <div>
+
+            <h1>
+                All Tasks
+            </h1>
+
+            <div class="subtitle">
+
+                All tasks across all projects
+
+            </div>
+
+        </div>
+
+    </div>
+
+
+    <div class="panel">
+
+        <div
+            class="table-container"
+            id="taskTable">
+
+        </div>
+
+    </div>
+
 
 </section>
 
-
-<!-- TASKS -->
-
-<section id="tasks" class="page">
-
-<div class="page-title">
-
-<div>
-<h1>All Tasks</h1>
-
-<div class="subtitle">
-All project tasks
-</div>
-
-</div>
-
-</div>
-
-<div class="panel">
-
-<div id="taskTable"></div>
-
-</div>
-
-</section>
 
 </main>
 
 </div>
 
 
-<!-- PROJECT MODAL -->
+<!-- =====================================================
+     PROJECT MODAL
+===================================================== -->
 
-<div class="modal" id="projectModal">
-
-<div class="modal-box">
-
-<h2 id="projectModalTitle">Add Project</h2>
-
-<div class="form-group">
-
-<label>Project Name</label>
-
-<input id="projectName">
-
-</div>
-
-<div class="form-group">
-
-<label>Project Owner</label>
-
-<input id="projectOwner">
-
-</div>
-
-<div class="form-group">
-
-<label>Start Date</label>
-
-<input id="projectStartDate" type="date">
-
-</div>
-
-<div class="form-group">
-
-<label>Target Date</label>
-
-<input id="projectTargetDate" type="date">
-
-</div>
-
-<div class="form-group">
-
-<label>Project Status</label>
-
-<select id="projectStatus">
-
-<option value="Pending">Pending</option>
-<option value="Completed">Completed</option>
-
-</select>
-
-</div>
-
-<div class="modal-buttons">
-
-<button class="secondary"
-onclick="closeModals()">
-Cancel
-</button>
-
-<button class="primary"
-onclick="saveProject()">
-Save Project
-</button>
-
-</div>
-
-</div>
-</div>
+<div
+    class="modal"
+    id="projectModal">
 
 
-<!-- ACTIVITY MODAL -->
+    <div class="modal-box">
 
-<div class="modal" id="activityModal">
 
-<div class="modal-box">
+        <h2 id="projectModalTitle">
+            Add Project
+        </h2>
 
-<h2 id="activityModalTitle">Add Activity</h2>
 
-<div class="form-group">
+        <div class="form-group">
 
-<label>Activity Name</label>
+            <label>
+                Project Name
+            </label>
 
-<input id="activityName">
+            <input
+                id="projectName"
+                type="text">
 
-</div>
+        </div>
 
-<div class="form-group">
 
-<label>Description</label>
+        <div class="form-group">
 
-<textarea id="activityDescription"></textarea>
+            <label>
+                Project Owner
+            </label>
 
-</div>
+            <input
+                id="projectOwner"
+                type="text">
 
-<div class="form-group">
+        </div>
 
-<label>Responsible Person</label>
 
-<input id="activityPerson">
+        <div class="form-group">
 
-</div>
+            <label>
+                Start Date
+            </label>
 
-<div class="form-group">
+            <input
+                id="projectStartDate"
+                type="date">
 
-<label>Due Date</label>
+        </div>
 
-<input id="activityDate" type="date">
 
-</div>
+        <div class="form-group">
 
-<div class="modal-buttons">
+            <label>
+                Target Date
+            </label>
 
-<button class="secondary"
-onclick="closeModals()">
-Cancel
-</button>
+            <input
+                id="projectTargetDate"
+                type="date">
 
-<button class="primary"
-onclick="saveActivity()">
-Save Activity
-</button>
+        </div>
+
+
+        <div class="form-group">
+
+            <label>
+                Project Status
+            </label>
+
+            <select id="projectStatus">
+
+                <option value="Pending">
+                    Pending
+                </option>
+
+                <option value="Completed">
+                    Completed
+                </option>
+
+            </select>
+
+        </div>
+
+
+        <div class="modal-buttons">
+
+            <button
+                class="secondary"
+                onclick="closeModals()">
+
+                Cancel
+
+            </button>
+
+
+            <button
+                class="primary"
+                onclick="saveProject()">
+
+                Save Project
+
+            </button>
+
+        </div>
+
+    </div>
 
 </div>
 
+
+<!-- =====================================================
+     ACTIVITY MODAL
+===================================================== -->
+
+<div
+    class="modal"
+    id="activityModal">
+
+
+    <div class="modal-box">
+
+
+        <h2 id="activityModalTitle">
+            Add Activity
+        </h2>
+
+
+        <div class="form-group">
+
+            <label>
+                Activity Name
+            </label>
+
+            <input
+                id="activityName"
+                type="text">
+
+        </div>
+
+
+        <div class="form-group">
+
+            <label>
+                Description
+            </label>
+
+            <textarea
+                id="activityDescription">
+            </textarea>
+
+        </div>
+
+
+        <div class="form-group">
+
+            <label>
+                Responsible Person
+            </label>
+
+            <select id="activityPerson">
+
+                <option value="">
+                    Select responsible person
+                </option>
+
+            </select>
+
+        </div>
+
+
+        <div class="form-group">
+
+            <label>
+                Due Date
+            </label>
+
+            <input
+                id="activityDate"
+                type="date">
+
+        </div>
+
+
+        <div class="modal-buttons">
+
+            <button
+                class="secondary"
+                onclick="closeModals()">
+
+                Cancel
+
+            </button>
+
+
+            <button
+                class="primary"
+                onclick="saveActivity()">
+
+                Save Activity
+
+            </button>
+
+        </div>
+
+    </div>
+
 </div>
+
+
+<!-- =====================================================
+     TASK MODAL
+===================================================== -->
+
+<div
+    class="modal"
+    id="taskModal">
+
+
+    <div class="modal-box">
+
+
+        <h2 id="taskModalTitle">
+            Add Task
+        </h2>
+
+
+        <div class="form-group">
+
+            <label>
+                Task Name
+            </label>
+
+            <input
+                id="taskName"
+                type="text">
+
+        </div>
+
+
+        <div class="form-group">
+
+            <label>
+                Responsible Person
+            </label>
+
+            <select id="taskPerson">
+
+                <option value="">
+                    Select responsible person
+                </option>
+
+            </select>
+
+        </div>
+
+
+        <div class="form-group">
+
+            <label>
+                Due Date
+            </label>
+
+            <input
+                id="taskDate"
+                type="date">
+
+        </div>
+
+
+        <div class="form-group">
+
+            <label>
+                Status
+            </label>
+
+            <select id="taskStatus">
+
+                <option value="Pending">
+                    Pending
+                </option>
+
+                <option value="Completed">
+                    Completed
+                </option>
+
+            </select>
+
+        </div>
+
+
+        <div class="modal-buttons">
+
+            <button
+                class="secondary"
+                onclick="closeModals()">
+
+                Cancel
+
+            </button>
+
+
+            <button
+                class="primary"
+                onclick="saveTask()">
+
+                Save Task
+
+            </button>
+
+        </div>
+
+    </div>
+
 </div>
 
 
-<!-- TASK MODAL -->
-
-<div class="modal" id="taskModal">
-
-<div class="modal-box">
-
-<h2 id="taskModalTitle">Add Task</h2>
-
-<div class="form-group">
-
-<label>Task Name</label>
-
-<input id="taskName">
-
-</div>
-
-<div class="form-group">
-
-<label>Responsible Person</label>
-
-<input id="taskPerson">
-
-</div>
-
-<div class="form-group">
-
-<label>Due Date</label>
-
-<input id="taskDate" type="date">
-
-</div>
-
-<div class="form-group">
-
-<label>Status</label>
-
-<select id="taskStatus">
-
-<option value="Pending">Pending</option>
-<option value="Completed">Completed</option>
-
-</select>
-
-</div>
-
-<div class="modal-buttons">
-
-<button class="secondary"
-onclick="closeModals()">
-Cancel
-</button>
-
-<button class="primary"
-onclick="saveTask()">
-Save Task
-</button>
-
-</div>
-
-</div>
-</div>
-
+<!-- =====================================================
+     JAVASCRIPT
+===================================================== -->
 
 <script>
 
+
 /* =====================================================
-   SUPABASE
-   ===================================================== */
+   SUPABASE CONNECTION
+===================================================== */
 
 const SUPABASE_URL =
 "https://skmvwzqdtderulxwqila.supabase.co";
 
+
 const SUPABASE_KEY =
-"sb_publishable_8lgSbEMhydRR6LtERtMuug_dftc3aTU";
+"Psb_publishable_8lgSbEMhydRR6LtERtMuug_dftc3aTU";
+
 
 const db =
 window.supabase.createClient(
-SUPABASE_URL,
-SUPABASE_KEY
+    SUPABASE_URL,
+    SUPABASE_KEY
 );
 
 
 /* =====================================================
-   VARIABLES
-   ===================================================== */
+   DEFAULT PEOPLE
+===================================================== */
 
-let editingProject=null;
-let editingActivity=null;
-let editingTask=null;
+const DEFAULT_PEOPLE = [
 
-let selectedProject=null;
-let selectedActivity=null;
+    "Manigandan",
+
+    "Satyam",
+
+    "Tharani",
+
+    "Gnapthika"
+
+];
+
+
+/* =====================================================
+   EDITING VARIABLES
+===================================================== */
+
+let editingProject = null;
+
+let editingActivity = null;
+
+let editingTask = null;
+
+let selectedProject = null;
+
+let selectedActivity = null;
 
 
 /* =====================================================
    NAVIGATION
-   ===================================================== */
+===================================================== */
 
-function showPage(page,element){
+function showPage(
+    page,
+    element
+){
 
-document
-.querySelectorAll(".page")
-.forEach(x=>x.classList.remove("active"));
+    document
+        .querySelectorAll(".page")
+        .forEach(pageElement => {
 
-document
-.getElementById(page)
-.classList.add("active");
+            pageElement.classList.remove(
+                "active"
+            );
 
-document
-.querySelectorAll(".menu")
-.forEach(x=>x.classList.remove("active"));
+        });
 
-if(element) element.classList.add("active");
 
-renderAll();
+    document
+        .getElementById(page)
+        .classList.add("active");
+
+
+    document
+        .querySelectorAll(".menu")
+        .forEach(menu => {
+
+            menu.classList.remove(
+                "active"
+            );
+
+        });
+
+
+    if(element){
+
+        element.classList.add(
+            "active"
+        );
+
+    }
+
+
+    renderAll();
 
 }
 
 
 /* =====================================================
-   LOAD DATABASE
-   ===================================================== */
+   LOAD DATA
+===================================================== */
 
 async function loadData(){
 
-const [
-projectsResult,
-activitiesResult,
-tasksResult
-]=await Promise.all([
+    const [
 
-db
-.from("projects")
-.select("*")
-.order("created_at",{ascending:true}),
+        projectsResult,
 
-db
-.from("activities")
-.select("*")
-.order("created_at",{ascending:true}),
+        activitiesResult,
 
-db
-.from("tasks")
-.select("*")
-.order("created_at",{ascending:true})
+        tasksResult
 
-]);
+    ] = await Promise.all([
 
 
-if(projectsResult.error){
-throw projectsResult.error;
-}
+        db
+            .from("projects")
+            .select("*")
+            .order(
+                "created_at",
+                {
+                    ascending:true
+                }
+            ),
 
-if(activitiesResult.error){
-throw activitiesResult.error;
-}
 
-if(tasksResult.error){
-throw tasksResult.error;
-}
+        db
+            .from("activities")
+            .select("*")
+            .order(
+                "created_at",
+                {
+                    ascending:true
+                }
+            ),
 
-return {
 
-projects:projectsResult.data || [],
-activities:activitiesResult.data || [],
-tasks:tasksResult.data || []
+        db
+            .from("tasks")
+            .select("*")
+            .order(
+                "created_at",
+                {
+                    ascending:true
+                }
+            )
 
-};
+    ]);
+
+
+    if(projectsResult.error){
+
+        throw projectsResult.error;
+
+    }
+
+
+    if(activitiesResult.error){
+
+        throw activitiesResult.error;
+
+    }
+
+
+    if(tasksResult.error){
+
+        throw tasksResult.error;
+
+    }
+
+
+    return {
+
+        projects:
+            projectsResult.data || [],
+
+        activities:
+            activitiesResult.data || [],
+
+        tasks:
+            tasksResult.data || []
+
+    };
 
 }
 
 
 /* =====================================================
    TASK STATUS
-   ===================================================== */
+===================================================== */
 
 function getTaskStatus(task){
 
-if(task.status==="Completed"){
-return "Completed";
-}
+    if(
+        task.status === "Completed"
+    ){
 
-if(
-task.due_date &&
-new Date(task.due_date+"T23:59:59") < new Date()
-){
-return "Overdue";
-}
+        return "Completed";
 
-return "Pending";
+    }
+
+
+    if(
+        task.due_date &&
+        new Date(
+            task.due_date + "T23:59:59"
+        ) < new Date()
+    ){
+
+        return "Overdue";
+
+    }
+
+
+    return "Pending";
 
 }
 
 
 /* =====================================================
-   WEIGHTED PROJECT PROGRESS
-   =====================================================
+   PROJECT PROGRESS
+=====================================================
 
-   PROJECT = 100%
+PROJECT = 100%
 
-   Every activity receives equal weight:
+Every activity receives equal weight.
 
-       Activity Weight = 100 / number of activities
+Example:
 
-   Every task inside an activity receives equal
-   share of that activity:
+4 activities
 
-       Task Weight =
-       Activity Weight / number of tasks
+Activity 1 = 25%
+Activity 2 = 25%
+Activity 3 = 25%
+Activity 4 = 25%
 
-   Completed task contributes its task weight.
-   Pending/Overdue contributes 0.
+If Activity 1 has 5 tasks:
 
-   Example:
+Each task = 25 / 5 = 5%
 
-   4 activities = 25% each
+If Activity 2 has 2 tasks:
 
-   Activity with 2 tasks:
-       each task = 12.5%
-
-   Activity with 4 tasks:
-       each task = 6.25%
+Each task = 25 / 2 = 12.5%
 
 ===================================================== */
 
 function calculateProjectProgress(
-projectId,
-activities,
-tasks
+    projectId,
+    activities,
+    tasks
 ){
 
-const projectActivities =
-activities.filter(
-a=>a.project_id===projectId
-);
+    const projectActivities =
+        activities.filter(
+            activity =>
+                activity.project_id === projectId
+        );
 
-if(projectActivities.length===0){
-return 0;
-}
 
-const activityWeight =
-100 / projectActivities.length;
+    if(
+        projectActivities.length === 0
+    ){
 
-let progress=0;
+        return 0;
 
-projectActivities.forEach(activity=>{
+    }
 
-const activityTasks =
-tasks.filter(
-t=>t.activity_id===activity.id
-);
 
-if(activityTasks.length===0){
+    const activityWeight =
+        100 /
+        projectActivities.length;
 
-/*
-An activity without tasks has no completed
-work, therefore contributes 0%.
-*/
 
-return;
+    let progress = 0;
 
-}
 
-const taskWeight =
-activityWeight /
-activityTasks.length;
+    projectActivities.forEach(
+        activity => {
 
-activityTasks.forEach(task=>{
 
-if(getTaskStatus(task)==="Completed"){
+            const activityTasks =
+                tasks.filter(
+                    task =>
+                        task.activity_id ===
+                        activity.id
+                );
 
-progress += taskWeight;
 
-}
+            if(
+                activityTasks.length === 0
+            ){
 
-});
+                return;
 
-});
+            }
 
-return Math.round(progress*100)/100;
+
+            const taskWeight =
+                activityWeight /
+                activityTasks.length;
+
+
+            activityTasks.forEach(
+                task => {
+
+                    if(
+                        getTaskStatus(task)
+                        === "Completed"
+                    ){
+
+                        progress +=
+                            taskWeight;
+
+                    }
+
+                }
+            );
+
+        }
+    );
+
+
+    return Math.round(
+        progress * 100
+    ) / 100;
 
 }
 
 
 /* =====================================================
-   PROJECT ACTIVITY PROGRESS
-   ===================================================== */
+   ACTIVITY PROGRESS
+===================================================== */
 
 function calculateActivityProgress(
-activityId,
-projectId,
-activities,
-tasks
+    activityId,
+    projectId,
+    activities,
+    tasks
 ){
 
-const projectActivities =
-activities.filter(
-a=>a.project_id===projectId
-);
+    const projectActivities =
+        activities.filter(
+            activity =>
+                activity.project_id === projectId
+        );
 
-if(!projectActivities.length){
-return 0;
+
+    if(
+        projectActivities.length === 0
+    ){
+
+        return 0;
+
+    }
+
+
+    const activityWeight =
+        100 /
+        projectActivities.length;
+
+
+    const activityTasks =
+        tasks.filter(
+            task =>
+                task.activity_id === activityId
+        );
+
+
+    if(
+        activityTasks.length === 0
+    ){
+
+        return 0;
+
+    }
+
+
+    const taskWeight =
+        activityWeight /
+        activityTasks.length;
+
+
+    const completed =
+        activityTasks.filter(
+            task =>
+                getTaskStatus(task)
+                === "Completed"
+        ).length;
+
+
+    return Math.round(
+        completed *
+        taskWeight *
+        100
+    ) / 100;
+
 }
 
-const activityWeight =
-100 / projectActivities.length;
 
-const activityTasks =
-tasks.filter(
-t=>t.activity_id===activityId
-);
+/* =====================================================
+   TEAM MEMBERS
+===================================================== */
 
-if(!activityTasks.length){
-return 0;
+async function getTeamMembers(){
+
+    const result =
+        await db
+            .from("team_members")
+            .select("*")
+            .eq(
+                "active",
+                true
+            )
+            .order(
+                "name"
+            );
+
+
+    if(result.error){
+
+        console.warn(
+            "team_members table:",
+            result.error.message
+        );
+
+        return [
+            ...DEFAULT_PEOPLE
+        ];
+
+    }
+
+
+    const databasePeople =
+        (result.data || [])
+            .map(
+                person =>
+                    person.name
+            )
+            .filter(
+                name =>
+                    name &&
+                    name.trim()
+            );
+
+
+    return [
+        ...new Set([
+            ...DEFAULT_PEOPLE,
+            ...databasePeople
+        ])
+    ];
+
 }
 
-const taskWeight =
-activityWeight/activityTasks.length;
 
-const completed =
-activityTasks.filter(
-t=>getTaskStatus(t)==="Completed"
-).length;
+/* =====================================================
+   POPULATE PEOPLE DROPDOWNS
+===================================================== */
 
-return Math.round(
-completed*taskWeight*100
-)/100;
+async function populatePeopleDropdowns(
+    activitySelected = "",
+    taskSelected = ""
+){
+
+    const people =
+        await getTeamMembers();
+
+
+    const activitySelect =
+        document.getElementById(
+            "activityPerson"
+        );
+
+
+    const taskSelect =
+        document.getElementById(
+            "taskPerson"
+        );
+
+
+    const options = people
+        .map(
+            person => `
+
+                <option value="${escapeHtml(person)}">
+
+                    ${escapeHtml(person)}
+
+                </option>
+
+            `
+        )
+        .join("");
+
+
+    if(activitySelect){
+
+        activitySelect.innerHTML = `
+
+            <option value="">
+
+                Select responsible person
+
+            </option>
+
+            ${options}
+
+            <option value="__ADD_NEW__">
+
+                + Add New Person
+
+            </option>
+
+        `;
+
+
+        activitySelect.value =
+            activitySelected || "";
+
+
+        activitySelect.onchange =
+            async function(){
+
+                if(
+                    this.value !==
+                    "__ADD_NEW__"
+                ){
+
+                    return;
+
+                }
+
+
+                const newName =
+                    prompt(
+                        "Enter new person's name:"
+                    );
+
+
+                if(
+                    !newName ||
+                    !newName.trim()
+                ){
+
+                    this.value =
+                        activitySelected || "";
+
+                    return;
+
+                }
+
+
+                const name =
+                    newName.trim();
+
+
+                const result =
+                    await db
+                        .from("team_members")
+                        .insert({
+
+                            name:name,
+
+                            active:true
+
+                        });
+
+
+                if(result.error){
+
+                    alert(
+                        "Unable to add person: " +
+                        result.error.message
+                    );
+
+
+                    this.value =
+                        activitySelected || "";
+
+                    return;
+
+                }
+
+
+                await populatePeopleDropdowns(
+                    name,
+                    taskSelected
+                );
+
+            };
+
+    }
+
+
+    if(taskSelect){
+
+        taskSelect.innerHTML = `
+
+            <option value="">
+
+                Select responsible person
+
+            </option>
+
+            ${options}
+
+            <option value="__ADD_NEW__">
+
+                + Add New Person
+
+            </option>
+
+        `;
+
+
+        taskSelect.value =
+            taskSelected || "";
+
+
+        taskSelect.onchange =
+            async function(){
+
+                if(
+                    this.value !==
+                    "__ADD_NEW__"
+                ){
+
+                    return;
+
+                }
+
+
+                const newName =
+                    prompt(
+                        "Enter new person's name:"
+                    );
+
+
+                if(
+                    !newName ||
+                    !newName.trim()
+                ){
+
+                    this.value =
+                        taskSelected || "";
+
+                    return;
+
+                }
+
+
+                const name =
+                    newName.trim();
+
+
+                const result =
+                    await db
+                        .from("team_members")
+                        .insert({
+
+                            name:name,
+
+                            active:true
+
+                        });
+
+
+                if(result.error){
+
+                    alert(
+                        "Unable to add person: " +
+                        result.error.message
+                    );
+
+
+                    this.value =
+                        taskSelected || "";
+
+                    return;
+
+                }
+
+
+                await populatePeopleDropdowns(
+                    activitySelected,
+                    name
+                );
+
+            };
+
+    }
 
 }
 
 
 /* =====================================================
    DASHBOARD
-   ===================================================== */
+===================================================== */
 
 async function renderDashboard(){
 
-const data=await loadData();
-
-let completed=0;
-let pending=0;
-let overdue=0;
-
-data.tasks.forEach(task=>{
-
-const status=getTaskStatus(task);
-
-if(status==="Completed") completed++;
-if(status==="Pending") pending++;
-if(status==="Overdue") overdue++;
-
-});
-
-document.getElementById(
-"totalProjects"
-).innerText=data.projects.length;
-
-document.getElementById(
-"totalTasks"
-).innerText=data.tasks.length;
-
-document.getElementById(
-"completedTasks"
-).innerText=completed;
-
-document.getElementById(
-"pendingTasks"
-).innerText=pending;
-
-document.getElementById(
-"overdueTasks"
-).innerText=overdue;
+    const data =
+        await loadData();
 
 
-let html="";
+    let completed = 0;
 
-data.projects.forEach(project=>{
+    let pending = 0;
 
-const progress=
-calculateProjectProgress(
-project.id,
-data.activities,
-data.tasks
-);
+    let overdue = 0;
 
-html+=`
 
-<div style="margin-top:20px">
+    data.tasks.forEach(
+        task => {
 
-<div style="
-display:flex;
-justify-content:space-between;
-align-items:center">
+            const status =
+                getTaskStatus(task);
 
-<strong>
-${escapeHtml(project.project_name)}
-</strong>
 
-<strong>
-${progress.toFixed(2)}%
-</strong>
+            if(
+                status === "Completed"
+            ){
 
-</div>
+                completed++;
 
-<div class="progress">
+            }
 
-<div class="progress-bar"
-style="width:${progress}%">
-</div>
 
-</div>
+            if(
+                status === "Pending"
+            ){
 
-<div class="subtitle">
+                pending++;
 
-Status:
-<span class="badge ${
-project.status==="Completed"
-?"completed"
-:"pending"
-}">
-${escapeHtml(project.status || "Pending")}
-</span>
+            }
 
-</div>
 
-</div>
+            if(
+                status === "Overdue"
+            ){
 
-`;
+                overdue++;
 
-});
+            }
 
-document.getElementById(
-"projectProgress"
-).innerHTML=html ||
-`<div class="empty">
-No projects added yet.
-</div>`;
+        }
+    );
+
+
+    document.getElementById(
+        "totalProjects"
+    ).innerText =
+        data.projects.length;
+
+
+    document.getElementById(
+        "totalTasks"
+    ).innerText =
+        data.tasks.length;
+
+
+    document.getElementById(
+        "completedTasks"
+    ).innerText =
+        completed;
+
+
+    document.getElementById(
+        "pendingTasks"
+    ).innerText =
+        pending;
+
+
+    document.getElementById(
+        "overdueTasks"
+    ).innerText =
+        overdue;
+
+
+    let html = "";
+
+
+    data.projects.forEach(
+        project => {
+
+
+            const progress =
+                calculateProjectProgress(
+                    project.id,
+                    data.activities,
+                    data.tasks
+                );
+
+
+            html += `
+
+                <div style="
+                    margin-top:20px;
+                ">
+
+
+                    <div style="
+                        display:flex;
+                        justify-content:space-between;
+                        gap:10px;
+                    ">
+
+                        <strong>
+
+                            ${escapeHtml(
+                                project.project_name
+                            )}
+
+                        </strong>
+
+
+                        <strong>
+
+                            ${progress.toFixed(2)}%
+
+                        </strong>
+
+                    </div>
+
+
+                    <div class="progress">
+
+                        <div
+                            class="progress-bar"
+                            style="
+                                width:${progress}%
+                            ">
+                        </div>
+
+                    </div>
+
+
+                    <div class="subtitle">
+
+                        Status:
+
+                        ${statusBadge(
+                            project.status ||
+                            "Pending"
+                        )}
+
+                    </div>
+
+
+                </div>
+
+            `;
+
+        }
+    );
+
+
+    document.getElementById(
+        "projectProgress"
+    ).innerHTML =
+
+        html ||
+
+        `
+
+            <div class="empty">
+
+                No projects added yet.
+
+            </div>
+
+        `;
 
 }
 
 
 /* =====================================================
-   PROJECTS
-   ===================================================== */
+   STATUS BADGE
+===================================================== */
+
+function statusBadge(status){
+
+    const cls =
+        status === "Completed"
+
+        ? "badge-completed"
+
+        : status === "Overdue"
+
+        ? "badge-overdue"
+
+        : "badge-pending";
+
+
+    return `
+
+        <span class="badge ${cls}">
+
+            ${escapeHtml(status)}
+
+        </span>
+
+    `;
+
+}
+
+
+/* =====================================================
+   RENDER PROJECTS
+===================================================== */
 
 async function renderProjects(){
 
-const data=await loadData();
-
-const container=
-document.getElementById("projectList");
-
-if(!data.projects.length){
-
-container.innerHTML=`
-<div class="panel empty">
-No projects yet.
-</div>`;
-
-return;
-
-}
+    const data =
+        await loadData();
 
 
-container.innerHTML=
-data.projects.map(project=>{
-
-const projectActivities=
-data.activities.filter(
-a=>a.project_id===project.id
-);
-
-const progress=
-calculateProjectProgress(
-project.id,
-data.activities,
-data.tasks
-);
-
-const statusClass=
-project.status==="Completed"
-?"completed"
-:"pending";
+    const container =
+        document.getElementById(
+            "projectList"
+        );
 
 
-return `
+    if(
+        data.projects.length === 0
+    ){
 
-<div class="project-card">
+        container.innerHTML = `
 
-<div class="project-header">
+            <div class="panel empty">
 
-<div style="flex:1">
+                No projects yet.
 
-<h2>
-${escapeHtml(project.project_name)}
-</h2>
+            </div>
 
-<div class="subtitle">
+        `;
 
-Owner:
-${escapeHtml(project.project_owner || "—")}
+        return;
 
-&nbsp; | &nbsp;
-
-Target:
-${project.target_date || "—"}
-
-&nbsp; | &nbsp;
-
-<span class="badge ${statusClass}">
-${escapeHtml(project.status || "Pending")}
-</span>
-
-</div>
-
-<div style="margin-top:12px">
-
-<strong>
-Project Progress: ${progress.toFixed(2)}%
-</strong>
-
-<div class="progress">
-
-<div class="progress-bar"
-style="width:${progress}%">
-</div>
-
-</div>
-
-</div>
-
-</div>
+    }
 
 
-<div class="actions">
-
-<button class="secondary"
-onclick="editProject('${project.id}')">
-Edit
-</button>
-
-<button class="danger"
-onclick="deleteProject('${project.id}')">
-Delete
-</button>
-
-<button class="primary"
-onclick="openActivityModal('${project.id}')">
-+ Activity
-</button>
-
-</div>
-
-</div>
-
-
-${
-projectActivities.length
-?
-projectActivities.map(
-activity=>renderActivity(
-activity,
-project.id,
-data
-)
-).join("")
-:
-`<div class="empty">
-No activities added.
-</div>`
-}
-
-</div>
-
-`;
-
-}).join("");
+    container.innerHTML =
+        data.projects
+            .map(
+                project =>
+                    renderProject(
+                        project,
+                        data
+                    )
+            )
+            .join("");
 
 }
 
 
 /* =====================================================
-   ACTIVITY
-   ===================================================== */
+   RENDER PROJECT
+===================================================== */
+
+function renderProject(
+    project,
+    data
+){
+
+    const projectActivities =
+        data.activities.filter(
+            activity =>
+                activity.project_id ===
+                project.id
+        );
+
+
+    const progress =
+        calculateProjectProgress(
+            project.id,
+            data.activities,
+            data.tasks
+        );
+
+
+    return `
+
+        <div class="project-card">
+
+
+            <div class="project-header">
+
+
+                <div style="
+                    flex:1;
+                ">
+
+
+                    <div class="project-title">
+
+                        ${escapeHtml(
+                            project.project_name
+                        )}
+
+                    </div>
+
+
+                    <div class="project-meta">
+
+                        Owner:
+                        <strong>
+                            ${escapeHtml(
+                                project.project_owner ||
+                                "—"
+                            )}
+                        </strong>
+
+
+                        &nbsp; | &nbsp;
+
+
+                        Start:
+                        ${project.start_date || "—"}
+
+
+                        &nbsp; | &nbsp;
+
+
+                        Target:
+                        ${project.target_date || "—"}
+
+
+                        &nbsp; | &nbsp;
+
+
+                        ${statusBadge(
+                            project.status ||
+                            "Pending"
+                        )}
+
+                    </div>
+
+
+                    <div style="
+                        margin-top:14px;
+                    ">
+
+
+                        <div style="
+                            display:flex;
+                            justify-content:space-between;
+                        ">
+
+                            <strong>
+
+                                Project Progress
+
+                            </strong>
+
+
+                            <strong>
+
+                                ${progress.toFixed(2)}%
+
+                            </strong>
+
+                        </div>
+
+
+                        <div class="progress">
+
+                            <div
+                                class="progress-bar"
+                                style="
+                                    width:${progress}%
+                                ">
+                            </div>
+
+                        </div>
+
+
+                    </div>
+
+
+                </div>
+
+
+                <div class="actions">
+
+
+                    <button
+                        class="secondary"
+                        onclick="
+                            editProject(
+                                '${project.id}'
+                            )
+                        ">
+
+                        Edit
+
+                    </button>
+
+
+                    <button
+                        class="danger"
+                        onclick="
+                            deleteProject(
+                                '${project.id}'
+                            )
+                        ">
+
+                        Delete
+
+                    </button>
+
+
+                    <button
+                        class="primary"
+                        onclick="
+                            openActivityModal(
+                                '${project.id}'
+                            )
+                        ">
+
+                        + Activity
+
+                    </button>
+
+
+                </div>
+
+
+            </div>
+
+
+            ${
+                projectActivities.length
+
+                ?
+
+                projectActivities
+                    .map(
+                        activity =>
+                            renderActivity(
+                                activity,
+                                project,
+                                data
+                            )
+                    )
+                    .join("")
+
+                :
+
+                `
+
+                    <div class="empty">
+
+                        No activities added.
+
+                    </div>
+
+                `
+
+            }
+
+
+        </div>
+
+    `;
+
+}
+
+
+/* =====================================================
+   RENDER ACTIVITY
+===================================================== */
 
 function renderActivity(
-activity,
-projectId,
-data
+    activity,
+    project,
+    data
 ){
 
-const activityTasks=
-data.tasks.filter(
-t=>t.activity_id===activity.id
-);
-
-const activityProgress=
-calculateActivityProgress(
-activity.id,
-projectId,
-data.activities,
-data.tasks
-);
-
-const totalActivities=
-data.activities.filter(
-a=>a.project_id===projectId
-).length;
-
-const activityWeight=
-totalActivities
-?100/totalActivities
-:0;
+    const activityTasks =
+        data.tasks.filter(
+            task =>
+                task.activity_id ===
+                activity.id
+        );
 
 
-return `
-
-<div class="activity">
-
-<div class="project-header">
-
-<div style="flex:1">
-
-<strong>
-${escapeHtml(activity.activity_name)}
-</strong>
-
-<div class="subtitle">
-
-Responsible:
-
-<span class="person"
-onclick="openPerson(
-'${escapeAttr(
-activity.responsible_person ||
-"Unassigned"
-)}'
-)">
-
-${escapeHtml(
-activity.responsible_person ||
-"Unassigned"
-)}
-
-</span>
-
-&nbsp; | &nbsp;
-
-Due:
-${activity.due_date || "—"}
-
-</div>
-
-<div class="weight">
-
-Activity Weight:
-${activityWeight.toFixed(2)}%
-
-&nbsp; | &nbsp;
-
-Completed Contribution:
-${activityProgress.toFixed(2)}%
-
-</div>
-
-<div class="progress small-progress">
-
-<div class="progress-bar"
-style="width:${
-activityWeight
-?activityProgress/activityWeight*100
-:0
-}%">
-</div>
-
-</div>
-
-</div>
+    const totalActivities =
+        data.activities.filter(
+            a =>
+                a.project_id ===
+                project.id
+        ).length;
 
 
-<div class="actions">
+    const activityWeight =
+        totalActivities
 
-<button class="secondary"
-onclick="editActivity('${activity.id}')">
-Edit
-</button>
+        ?
 
-<button class="danger"
-onclick="deleteActivity('${activity.id}')">
-Delete
-</button>
+        100 / totalActivities
 
-<button class="primary"
-onclick="
-openTaskModal(
-'${activity.id}',
-'${projectId}'
-)">
-+ Task
-</button>
+        :
 
-</div>
-
-</div>
+        0;
 
 
-${
-activityTasks.length
-?
-activityTasks.map(
-task=>renderTask(
-task,
-activityWeight/
-activityTasks.length
-)
-).join("")
-:
-`<div class="empty">
-No tasks added.
-</div>`
-}
+    const activityProgress =
+        calculateActivityProgress(
+            activity.id,
+            project.id,
+            data.activities,
+            data.tasks
+        );
 
-</div>
 
-`;
+    const activityBar =
+        activityWeight
+
+        ?
+
+        Math.min(
+            100,
+            (
+                activityProgress /
+                activityWeight
+            ) * 100
+        )
+
+        :
+
+        0;
+
+
+    return `
+
+        <div class="activity">
+
+
+            <div class="activity-header">
+
+
+                <div style="
+                    flex:1;
+                ">
+
+
+                    <div class="activity-name">
+
+                        ${escapeHtml(
+                            activity.activity_name
+                        )}
+
+                    </div>
+
+
+                    <div class="activity-info">
+
+
+                        Responsible:
+
+                        <span
+                            class="person"
+                            onclick="
+                                openPerson(
+                                    '${escapeAttr(
+                                        activity.responsible_person ||
+                                        "Unassigned"
+                                    )}'
+                                )
+                            ">
+
+                            ${escapeHtml(
+                                activity.responsible_person ||
+                                "Unassigned"
+                            )}
+
+                        </span>
+
+
+                        &nbsp; | &nbsp;
+
+
+                        Due:
+
+                        ${activity.due_date || "—"}
+
+
+                    </div>
+
+
+                    <div class="weight">
+
+                        Activity Weight:
+
+                        ${activityWeight.toFixed(2)}%
+
+
+                        &nbsp; | &nbsp;
+
+
+                        Completed Contribution:
+
+                        ${activityProgress.toFixed(2)}%
+
+                    </div>
+
+
+                    <div class="progress small-progress">
+
+                        <div
+                            class="progress-bar"
+                            style="
+                                width:${activityBar}%
+                            ">
+                        </div>
+
+                    </div>
+
+
+                </div>
+
+
+                <div class="actions">
+
+
+                    <button
+                        class="secondary"
+                        onclick="
+                            editActivity(
+                                '${activity.id}'
+                            )
+                        ">
+
+                        Edit
+
+                    </button>
+
+
+                    <button
+                        class="danger"
+                        onclick="
+                            deleteActivity(
+                                '${activity.id}'
+                            )
+                        ">
+
+                        Delete
+
+                    </button>
+
+
+                    <button
+                        class="primary"
+                        onclick="
+                            openTaskModal(
+                                '${activity.id}',
+                                '${project.id}'
+                            )
+                        ">
+
+                        + Task
+
+                    </button>
+
+
+                </div>
+
+
+            </div>
+
+
+            <div class="task-list">
+
+
+                <div class="task-list-title">
+
+                    TASKS
+
+                </div>
+
+
+                ${
+                    activityTasks.length
+
+                    ?
+
+                    activityTasks
+                        .map(
+                            task =>
+                                renderTask(
+                                    task,
+                                    activityWeight /
+                                    activityTasks.length
+                                )
+                        )
+                        .join("")
+
+                    :
+
+                    `
+
+                        <div class="empty">
+
+                            No tasks added to this activity.
+
+                            <br><br>
+
+                            <button
+                                class="primary"
+                                onclick="
+                                    openTaskModal(
+                                        '${activity.id}',
+                                        '${project.id}'
+                                    )
+                                ">
+
+                                + Add First Task
+
+                            </button>
+
+                        </div>
+
+                    `
+
+                }
+
+
+            </div>
+
+
+        </div>
+
+    `;
 
 }
 
 
 /* =====================================================
-   TASK
-   ===================================================== */
+   RENDER TASK
+===================================================== */
 
 function renderTask(
-task,
-taskWeight
+    task,
+    taskWeight
 ){
 
-const status=getTaskStatus(task);
-
-const cls=
-status==="Completed"
-?"completed"
-:
-status==="Overdue"
-?"overdue"
-:"pending";
+    const status =
+        getTaskStatus(task);
 
 
-return `
+    const checked =
+        status === "Completed"
+        ? "checked"
+        : "";
 
-<div class="task">
 
-<input
-type="checkbox"
-${status==="Completed"?"checked":""}
-onchange="
-quickComplete(
-'${task.id}',
-this.checked
-)
-">
+    return `
 
-<span style="flex:1">
+        <div class="task-row">
 
-${escapeHtml(task.task_name)}
 
-<span class="weight">
-(${taskWeight.toFixed(2)}%)
-</span>
+            <input
+                type="checkbox"
+                ${checked}
+                onchange="
+                    quickComplete(
+                        '${task.id}',
+                        this.checked
+                    )
+                ">
 
-</span>
 
-<span class="person"
-onclick="
-openPerson(
-'${escapeAttr(
-task.responsible_person ||
-"Unassigned"
-)}'
-)">
+            <div class="task-name">
 
-${escapeHtml(
-task.responsible_person ||
-"Unassigned"
-)}
+                ${escapeHtml(
+                    task.task_name
+                )}
 
-</span>
+                <div class="task-weight">
 
-<span>
-${task.due_date || "—"}
-</span>
+                    Task Weight:
 
-<span class="badge ${cls}">
-${status}
-</span>
+                    ${taskWeight.toFixed(2)}%
 
-<button class="secondary"
-onclick="editTask('${task.id}')">
-Edit
-</button>
+                </div>
 
-<button class="danger"
-onclick="deleteTask('${task.id}')">
-Delete
-</button>
+            </div>
 
-</div>
 
-`;
+            <div>
+
+                <span
+                    class="task-person"
+                    onclick="
+                        openPerson(
+                            '${escapeAttr(
+                                task.responsible_person ||
+                                "Unassigned"
+                            )}'
+                        )
+                    ">
+
+                    ${escapeHtml(
+                        task.responsible_person ||
+                        "Unassigned"
+                    )}
+
+                </span>
+
+            </div>
+
+
+            <div class="task-date">
+
+                ${task.due_date || "—"}
+
+            </div>
+
+
+            <div>
+
+                ${statusBadge(status)}
+
+            </div>
+
+
+            <div>
+
+                ${taskWeight.toFixed(2)}%
+
+            </div>
+
+
+            <div class="task-actions">
+
+
+                <button
+                    class="secondary"
+                    onclick="
+                        editTask(
+                            '${task.id}'
+                        )
+                    ">
+
+                    Edit
+
+                </button>
+
+
+                <button
+                    class="danger"
+                    onclick="
+                        deleteTask(
+                            '${task.id}'
+                        )
+                    ">
+
+                    Delete
+
+                </button>
+
+
+            </div>
+
+
+        </div>
+
+    `;
 
 }
 
 
 /* =====================================================
    PEOPLE DASHBOARD
-   ===================================================== */
+===================================================== */
 
 async function renderPeople(){
 
-const data=await loadData();
-
-const people={};
-
-data.tasks.forEach(task=>{
-
-const person=
-task.responsible_person ||
-"Unassigned";
-
-if(!people[person]){
-people[person]=[];
-}
-
-people[person].push(task);
-
-});
+    const data =
+        await loadData();
 
 
-const names=Object.keys(people);
-
-if(!names.length){
-
-document.getElementById(
-"peopleTable"
-).innerHTML=
-`<div class="empty">
-No responsible persons yet.
-</div>`;
-
-return;
-
-}
+    const people = {};
 
 
-let html=`
+    data.tasks.forEach(
+        task => {
 
-<table>
-
-<thead>
-
-<tr>
-
-<th>Responsible Person</th>
-<th>Total</th>
-<th>Completed</th>
-<th>Pending</th>
-<th>Overdue</th>
-
-</tr>
-
-</thead>
-
-<tbody>
-
-`;
+            const person =
+                task.responsible_person ||
+                "Unassigned";
 
 
-names.forEach(name=>{
+            if(
+                !people[person]
+            ){
 
-const tasks=people[name];
+                people[person] = [];
 
-const completed=
-tasks.filter(
-t=>getTaskStatus(t)==="Completed"
-).length;
-
-const pending=
-tasks.filter(
-t=>getTaskStatus(t)==="Pending"
-).length;
-
-const overdue=
-tasks.filter(
-t=>getTaskStatus(t)==="Overdue"
-).length;
+            }
 
 
-html+=`
+            people[person].push(task);
 
-<tr>
-
-<td>
-
-<span class="person"
-onclick="
-openPerson(
-'${escapeAttr(name)}'
-)">
-
-${escapeHtml(name)}
-
-</span>
-
-</td>
-
-<td>${tasks.length}</td>
-
-<td>
-<span class="badge completed">
-${completed}
-</span>
-</td>
-
-<td>
-<span class="badge pending">
-${pending}
-</span>
-</td>
-
-<td>
-<span class="badge overdue">
-${overdue}
-</span>
-</td>
-
-</tr>
-
-`;
-
-});
+        }
+    );
 
 
-html+=`
+    const names =
+        Object.keys(people);
 
-</tbody>
-</table>
-`;
 
-document.getElementById(
-"peopleTable"
-).innerHTML=html;
+    if(
+        names.length === 0
+    ){
+
+        document.getElementById(
+            "peopleTable"
+        ).innerHTML = `
+
+            <div class="empty">
+
+                No responsible persons yet.
+
+            </div>
+
+        `;
+
+        return;
+
+    }
+
+
+    let html = `
+
+        <div class="table-container">
+
+            <table>
+
+                <thead>
+
+                    <tr>
+
+                        <th>
+                            Responsible Person
+                        </th>
+
+                        <th>
+                            Total
+                        </th>
+
+                        <th>
+                            Completed
+                        </th>
+
+                        <th>
+                            Pending
+                        </th>
+
+                        <th>
+                            Overdue
+                        </th>
+
+                    </tr>
+
+                </thead>
+
+                <tbody>
+
+    `;
+
+
+    names.forEach(
+        name => {
+
+
+            const tasks =
+                people[name];
+
+
+            const completed =
+                tasks.filter(
+                    task =>
+                        getTaskStatus(task)
+                        === "Completed"
+                ).length;
+
+
+            const pending =
+                tasks.filter(
+                    task =>
+                        getTaskStatus(task)
+                        === "Pending"
+                ).length;
+
+
+            const overdue =
+                tasks.filter(
+                    task =>
+                        getTaskStatus(task)
+                        === "Overdue"
+                ).length;
+
+
+            html += `
+
+                <tr>
+
+
+                    <td>
+
+                        <span
+                            class="person"
+                            onclick="
+                                openPerson(
+                                    '${escapeAttr(name)}'
+                                )
+                            ">
+
+                            ${escapeHtml(name)}
+
+                        </span>
+
+                    </td>
+
+
+                    <td>
+
+                        ${tasks.length}
+
+                    </td>
+
+
+                    <td>
+
+                        <span
+                            class="badge badge-completed">
+
+                            ${completed}
+
+                        </span>
+
+                    </td>
+
+
+                    <td>
+
+                        <span
+                            class="badge badge-pending">
+
+                            ${pending}
+
+                        </span>
+
+                    </td>
+
+
+                    <td>
+
+                        <span
+                            class="badge badge-overdue">
+
+                            ${overdue}
+
+                        </span>
+
+                    </td>
+
+
+                </tr>
+
+            `;
+
+        }
+    );
+
+
+    html += `
+
+                </tbody>
+
+            </table>
+
+        </div>
+
+    `;
+
+
+    document.getElementById(
+        "peopleTable"
+    ).innerHTML = html;
 
 }
 
 
 /* =====================================================
-   PERSON DASHBOARD
-   ===================================================== */
+   OPEN PERSON
+===================================================== */
 
-async function openPerson(person){
+async function openPerson(
+    person
+){
 
-document
-.querySelectorAll(".page")
-.forEach(x=>x.classList.remove("active"));
-
-document
-.getElementById("people")
-.classList.add("active");
-
-document
-.querySelectorAll(".menu")
-.forEach(x=>x.classList.remove("active"));
-
-document
-.querySelectorAll(".menu")[2]
-.classList.add("active");
+    document
+        .querySelectorAll(".page")
+        .forEach(
+            page =>
+                page.classList.remove(
+                    "active"
+                )
+        );
 
 
-const data=await loadData();
-
-const tasks=
-data.tasks.filter(
-t=>
-(t.responsible_person||"Unassigned")
-===person
-);
+    document
+        .getElementById("people")
+        .classList.add("active");
 
 
-const completed=
-tasks.filter(
-t=>getTaskStatus(t)==="Completed"
-).length;
-
-const pending=
-tasks.filter(
-t=>getTaskStatus(t)==="Pending"
-).length;
-
-const overdue=
-tasks.filter(
-t=>getTaskStatus(t)==="Overdue"
-).length;
+    document
+        .querySelectorAll(".menu")
+        .forEach(
+            menu =>
+                menu.classList.remove(
+                    "active"
+                )
+        );
 
 
-const max=
-Math.max(
-completed,
-pending,
-overdue,
-1
-);
+    document
+        .querySelectorAll(".menu")[2]
+        .classList.add("active");
 
 
-document.getElementById(
-"personDetails"
-).innerHTML=`
-
-<h2>
-${escapeHtml(person)}
-</h2>
-
-<div class="subtitle">
-Total Tasks: ${tasks.length}
-</div>
+    const data =
+        await loadData();
 
 
-<div class="bar-row">
-
-<strong>Completed</strong>
-
-<div class="bar"
-onclick="
-showPersonTasks(
-'${escapeAttr(person)}',
-'Completed'
-)">
-
-<div class="bar-green"
-style="
-width:${completed/max*100}%
-">
-</div>
-
-</div>
-
-<strong>${completed}</strong>
-
-</div>
+    const tasks =
+        data.tasks.filter(
+            task =>
+                (
+                    task.responsible_person ||
+                    "Unassigned"
+                ) === person
+        );
 
 
-<div class="bar-row">
-
-<strong>Pending</strong>
-
-<div class="bar"
-onclick="
-showPersonTasks(
-'${escapeAttr(person)}',
-'Pending'
-)">
-
-<div class="bar-orange"
-style="
-width:${pending/max*100}%
-">
-</div>
-
-</div>
-
-<strong>${pending}</strong>
-
-</div>
+    const completed =
+        tasks.filter(
+            task =>
+                getTaskStatus(task)
+                === "Completed"
+        ).length;
 
 
-<div class="bar-row">
-
-<strong>Overdue</strong>
-
-<div class="bar"
-onclick="
-showPersonTasks(
-'${escapeAttr(person)}',
-'Overdue'
-)">
-
-<div class="bar-red"
-style="
-width:${overdue/max*100}%
-">
-</div>
-
-</div>
-
-<strong>${overdue}</strong>
-
-</div>
+    const pending =
+        tasks.filter(
+            task =>
+                getTaskStatus(task)
+                === "Pending"
+        ).length;
 
 
-<div id="personTaskList"></div>
+    const overdue =
+        tasks.filter(
+            task =>
+                getTaskStatus(task)
+                === "Overdue"
+        ).length;
 
-`;
+
+    const max =
+        Math.max(
+            completed,
+            pending,
+            overdue,
+            1
+        );
+
+
+    document.getElementById(
+        "personDetails"
+    ).innerHTML = `
+
+        <h2>
+
+            ${escapeHtml(person)}
+
+        </h2>
+
+
+        <div class="subtitle">
+
+            Total Tasks:
+
+            ${tasks.length}
+
+        </div>
+
+
+        <div class="bar-row">
+
+
+            <strong>
+                Completed
+            </strong>
+
+
+            <div
+                class="bar"
+                onclick="
+                    showPersonTasks(
+                        '${escapeAttr(person)}',
+                        'Completed'
+                    )
+                ">
+
+                <div
+                    class="bar-green"
+                    style="
+                        width:
+                        ${completed / max * 100}%
+                    ">
+
+                </div>
+
+            </div>
+
+
+            <strong>
+                ${completed}
+            </strong>
+
+
+        </div>
+
+
+        <div class="bar-row">
+
+
+            <strong>
+                Pending
+            </strong>
+
+
+            <div
+                class="bar"
+                onclick="
+                    showPersonTasks(
+                        '${escapeAttr(person)}',
+                        'Pending'
+                    )
+                ">
+
+                <div
+                    class="bar-orange"
+                    style="
+                        width:
+                        ${pending / max * 100}%
+                    ">
+
+                </div>
+
+            </div>
+
+
+            <strong>
+                ${pending}
+            </strong>
+
+
+        </div>
+
+
+        <div class="bar-row">
+
+
+            <strong>
+                Overdue
+            </strong>
+
+
+            <div
+                class="bar"
+                onclick="
+                    showPersonTasks(
+                        '${escapeAttr(person)}',
+                        'Overdue'
+                    )
+                ">
+
+                <div
+                    class="bar-red"
+                    style="
+                        width:
+                        ${overdue / max * 100}%
+                    ">
+
+                </div>
+
+            </div>
+
+
+            <strong>
+                ${overdue}
+            </strong>
+
+
+        </div>
+
+
+        <div id="personTaskList">
+
+        </div>
+
+    `;
 
 }
 
 
 /* =====================================================
    PERSON TASK LIST
-   ===================================================== */
+===================================================== */
 
 async function showPersonTasks(
-person,
-status
+    person,
+    status
 ){
 
-const data=await loadData();
-
-const tasks=
-data.tasks.filter(
-t=>
-(t.responsible_person||"Unassigned")
-===person &&
-getTaskStatus(t)===status
-);
+    const data =
+        await loadData();
 
 
-let html=`
+    const tasks =
+        data.tasks.filter(
+            task =>
 
-<h3 style="margin-top:25px">
-${status} Tasks
-</h3>
+                (
+                    task.responsible_person ||
+                    "Unassigned"
+                ) === person
 
-`;
+                &&
 
-
-if(!tasks.length){
-
-html+=`
-
-<div class="empty">
-No ${status.toLowerCase()} tasks.
-</div>
-
-`;
-
-}
-else{
-
-html+=`
-
-<table>
-
-<thead>
-
-<tr>
-
-<th>Task</th>
-<th>Project</th>
-<th>Activity</th>
-<th>Due Date</th>
-
-</tr>
-
-</thead>
-
-<tbody>
-
-`;
+                getTaskStatus(task) ===
+                status
+        );
 
 
-tasks.forEach(task=>{
+    let html = `
 
-const project=
-data.projects.find(
-p=>p.id===task.project_id
-);
+        <h3 style="
+            margin-top:25px;
+        ">
 
-const activity=
-data.activities.find(
-a=>a.id===task.activity_id
-);
+            ${status} Tasks
 
+        </h3>
 
-html+=`
-
-<tr>
-
-<td>
-${escapeHtml(task.task_name)}
-</td>
-
-<td>
-${escapeHtml(
-project?.project_name||""
-)}
-</td>
-
-<td>
-${escapeHtml(
-activity?.activity_name||""
-)}
-</td>
-
-<td>
-${task.due_date||"—"}
-</td>
-
-</tr>
-
-`;
-
-});
+    `;
 
 
-html+=`
+    if(
+        tasks.length === 0
+    ){
 
-</tbody>
-</table>
+        html += `
 
-`;
+            <div class="empty">
 
-}
+                No ${status.toLowerCase()}
+                tasks.
+
+            </div>
+
+        `;
+
+    }
+    else{
 
 
-document.getElementById(
-"personTaskList"
-).innerHTML=html;
+        html += `
+
+            <div class="table-container">
+
+                <table>
+
+                    <thead>
+
+                        <tr>
+
+                            <th>
+                                Task
+                            </th>
+
+                            <th>
+                                Project
+                            </th>
+
+                            <th>
+                                Activity
+                            </th>
+
+                            <th>
+                                Due Date
+                            </th>
+
+                        </tr>
+
+                    </thead>
+
+                    <tbody>
+
+        `;
+
+
+        tasks.forEach(
+            task => {
+
+
+                const project =
+                    data.projects.find(
+                        p =>
+                            p.id ===
+                            task.project_id
+                    );
+
+
+                const activity =
+                    data.activities.find(
+                        a =>
+                            a.id ===
+                            task.activity_id
+                    );
+
+
+                html += `
+
+                    <tr>
+
+                        <td>
+
+                            ${escapeHtml(
+                                task.task_name
+                            )}
+
+                        </td>
+
+                        <td>
+
+                            ${escapeHtml(
+                                project?.project_name ||
+                                ""
+                            )}
+
+                        </td>
+
+                        <td>
+
+                            ${escapeHtml(
+                                activity?.activity_name ||
+                                ""
+                            )}
+
+                        </td>
+
+                        <td>
+
+                            ${task.due_date || "—"}
+
+                        </td>
+
+                    </tr>
+
+                `;
+
+            }
+        );
+
+
+        html += `
+
+                    </tbody>
+
+                </table>
+
+            </div>
+
+        `;
+
+    }
+
+
+    document.getElementById(
+        "personTaskList"
+    ).innerHTML = html;
 
 }
 
 
 /* =====================================================
    ALL TASKS
-   ===================================================== */
+===================================================== */
 
 async function renderTasks(){
 
-const data=await loadData();
-
-if(!data.tasks.length){
-
-document.getElementById(
-"taskTable"
-).innerHTML=
-`<div class="empty">
-No tasks available.
-</div>`;
-
-return;
-
-}
+    const data =
+        await loadData();
 
 
-let html=`
+    if(
+        data.tasks.length === 0
+    ){
 
-<table>
+        document.getElementById(
+            "taskTable"
+        ).innerHTML = `
 
-<thead>
+            <div class="empty">
 
-<tr>
+                No tasks available.
 
-<th>Task</th>
-<th>Project</th>
-<th>Activity</th>
-<th>Responsible</th>
-<th>Due</th>
-<th>Status</th>
+            </div>
 
-</tr>
+        `;
 
-</thead>
+        return;
 
-<tbody>
-
-`;
+    }
 
 
-data.tasks.forEach(task=>{
+    let html = `
 
-const project=
-data.projects.find(
-p=>p.id===task.project_id
-);
+        <table>
 
-const activity=
-data.activities.find(
-a=>a.id===task.activity_id
-);
+            <thead>
 
-const status=getTaskStatus(task);
+                <tr>
 
-const cls=
-status==="Completed"
-?"completed"
-:
-status==="Overdue"
-?"overdue"
-:"pending";
+                    <th>
+                        Task
+                    </th>
 
+                    <th>
+                        Project
+                    </th>
 
-html+=`
+                    <th>
+                        Activity
+                    </th>
 
-<tr>
+                    <th>
+                        Responsible
+                    </th>
 
-<td>
-${escapeHtml(task.task_name)}
-</td>
+                    <th>
+                        Due
+                    </th>
 
-<td>
-${escapeHtml(
-project?.project_name||""
-)}
-</td>
+                    <th>
+                        Status
+                    </th>
 
-<td>
-${escapeHtml(
-activity?.activity_name||""
-)}
-</td>
+                </tr>
 
-<td>
-${escapeHtml(
-task.responsible_person||""
-)}
-</td>
+            </thead>
 
-<td>
-${task.due_date||"—"}
-</td>
+            <tbody>
 
-<td>
-<span class="badge ${cls}">
-${status}
-</span>
-</td>
-
-</tr>
-
-`;
-
-});
+    `;
 
 
-html+=`
+    data.tasks.forEach(
+        task => {
 
-</tbody>
-</table>
-`;
 
-document.getElementById(
-"taskTable"
-).innerHTML=html;
+            const project =
+                data.projects.find(
+                    p =>
+                        p.id ===
+                        task.project_id
+                );
+
+
+            const activity =
+                data.activities.find(
+                    a =>
+                        a.id ===
+                        task.activity_id
+                );
+
+
+            const status =
+                getTaskStatus(task);
+
+
+            html += `
+
+                <tr>
+
+
+                    <td>
+
+                        ${escapeHtml(
+                            task.task_name
+                        )}
+
+                    </td>
+
+
+                    <td>
+
+                        ${escapeHtml(
+                            project?.project_name ||
+                            ""
+                        )}
+
+                    </td>
+
+
+                    <td>
+
+                        ${escapeHtml(
+                            activity?.activity_name ||
+                            ""
+                        )}
+
+                    </td>
+
+
+                    <td>
+
+                        <span
+                            class="person"
+                            onclick="
+                                openPerson(
+                                    '${escapeAttr(
+                                        task.responsible_person ||
+                                        "Unassigned"
+                                    )}'
+                                )
+                            ">
+
+                            ${escapeHtml(
+                                task.responsible_person ||
+                                "Unassigned"
+                            )}
+
+                        </span>
+
+                    </td>
+
+
+                    <td>
+
+                        ${task.due_date || "—"}
+
+                    </td>
+
+
+                    <td>
+
+                        ${statusBadge(status)}
+
+                    </td>
+
+
+                </tr>
+
+            `;
+
+        }
+    );
+
+
+    html += `
+
+            </tbody>
+
+        </table>
+
+    `;
+
+
+    document.getElementById(
+        "taskTable"
+    ).innerHTML = html;
 
 }
 
 
 /* =====================================================
-   PROJECT ADD / EDIT
-   ===================================================== */
+   PROJECT MODAL
+===================================================== */
 
-function openProjectModal(id=null){
+function openProjectModal(
+    id = null
+){
 
-editingProject=id;
-
-document.getElementById(
-"projectModalTitle"
-).innerText=
-id
-?"Edit Project"
-:"Add Project";
+    editingProject = id;
 
 
-if(id){
+    document.getElementById(
+        "projectModalTitle"
+    ).innerText =
 
-loadProjectForEdit(id);
-
-}
-else{
-
-document.getElementById(
-"projectName"
-).value="";
-
-document.getElementById(
-"projectOwner"
-).value="";
-
-document.getElementById(
-"projectStartDate"
-).value="";
-
-document.getElementById(
-"projectTargetDate"
-).value="";
-
-document.getElementById(
-"projectStatus"
-).value="Pending";
-
-}
+        id
+        ? "Edit Project"
+        : "Add Project";
 
 
-document.getElementById(
-"projectModal"
-).classList.add("show");
+    if(!id){
 
-}
+        document.getElementById(
+            "projectName"
+        ).value = "";
 
 
-async function loadProjectForEdit(id){
+        document.getElementById(
+            "projectOwner"
+        ).value = "";
 
-const result=
-await db
-.from("projects")
-.select("*")
-.eq("id",id)
-.single();
 
-if(result.error){
+        document.getElementById(
+            "projectStartDate"
+        ).value = "";
 
-alert(result.error.message);
-return;
+
+        document.getElementById(
+            "projectTargetDate"
+        ).value = "";
+
+
+        document.getElementById(
+            "projectStatus"
+        ).value = "Pending";
+
+    }
+    else{
+
+        loadProjectForEdit(id);
+
+    }
+
+
+    document.getElementById(
+        "projectModal"
+    ).classList.add("show");
 
 }
 
-const data=result.data;
 
-document.getElementById(
-"projectName"
-).value=data.project_name||"";
+/* =====================================================
+   LOAD PROJECT
+===================================================== */
 
-document.getElementById(
-"projectOwner"
-).value=data.project_owner||"";
+async function loadProjectForEdit(
+    id
+){
 
-document.getElementById(
-"projectStartDate"
-).value=data.start_date||"";
+    const result =
+        await db
+            .from("projects")
+            .select("*")
+            .eq("id",id)
+            .single();
 
-document.getElementById(
-"projectTargetDate"
-).value=data.target_date||"";
 
-document.getElementById(
-"projectStatus"
-).value=data.status||"Pending";
+    if(result.error){
+
+        alert(
+            result.error.message
+        );
+
+        return;
+
+    }
+
+
+    const project =
+        result.data;
+
+
+    document.getElementById(
+        "projectName"
+    ).value =
+        project.project_name || "";
+
+
+    document.getElementById(
+        "projectOwner"
+    ).value =
+        project.project_owner || "";
+
+
+    document.getElementById(
+        "projectStartDate"
+    ).value =
+        project.start_date || "";
+
+
+    document.getElementById(
+        "projectTargetDate"
+    ).value =
+        project.target_date || "";
+
+
+    document.getElementById(
+        "projectStatus"
+    ).value =
+        project.status || "Pending";
 
 }
 
+
+/* =====================================================
+   SAVE PROJECT
+===================================================== */
 
 async function saveProject(){
 
-const project={
+    const project = {
 
-project_name:
-document.getElementById(
-"projectName"
-).value.trim(),
-
-project_owner:
-document.getElementById(
-"projectOwner"
-).value.trim(),
-
-start_date:
-document.getElementById(
-"projectStartDate"
-).value||null,
-
-target_date:
-document.getElementById(
-"projectTargetDate"
-).value||null,
-
-status:
-document.getElementById(
-"projectStatus"
-).value
-
-};
+        project_name:
+            document
+                .getElementById(
+                    "projectName"
+                )
+                .value
+                .trim(),
 
 
-if(!project.project_name){
+        project_owner:
+            document
+                .getElementById(
+                    "projectOwner"
+                )
+                .value
+                .trim(),
 
-alert("Please enter project name.");
-return;
+
+        start_date:
+            document
+                .getElementById(
+                    "projectStartDate"
+                )
+                .value ||
+            null,
+
+
+        target_date:
+            document
+                .getElementById(
+                    "projectTargetDate"
+                )
+                .value ||
+            null,
+
+
+        status:
+            document
+                .getElementById(
+                    "projectStatus"
+                )
+                .value
+
+    };
+
+
+    if(
+        !project.project_name
+    ){
+
+        alert(
+            "Please enter project name."
+        );
+
+        return;
+
+    }
+
+
+    let result;
+
+
+    if(editingProject){
+
+        result =
+            await db
+                .from("projects")
+                .update(project)
+                .eq(
+                    "id",
+                    editingProject
+                );
+
+    }
+    else{
+
+        result =
+            await db
+                .from("projects")
+                .insert(project);
+
+    }
+
+
+    if(result.error){
+
+        alert(
+            result.error.message
+        );
+
+        return;
+
+    }
+
+
+    closeModals();
+
+    await renderAll();
 
 }
 
 
-let result;
-
-if(editingProject){
-
-result=
-await db
-.from("projects")
-.update(project)
-.eq("id",editingProject);
-
-}
-else{
-
-result=
-await db
-.from("projects")
-.insert(project);
-
-}
-
-
-if(result.error){
-
-alert(result.error.message);
-return;
-
-}
-
-
-closeModals();
-await renderAll();
-
-}
-
+/* =====================================================
+   EDIT PROJECT
+===================================================== */
 
 function editProject(id){
 
-openProjectModal(id);
+    openProjectModal(id);
 
 }
 
+
+/* =====================================================
+   DELETE PROJECT
+===================================================== */
 
 async function deleteProject(id){
 
-if(!confirm(
-"Delete this project and all its activities and tasks?"
-)){
-return;
-}
+    if(
+        !confirm(
+            "Delete this project and all its activities and tasks?"
+        )
+    ){
+
+        return;
+
+    }
 
 
-const activityResult=
-await db
-.from("activities")
-.select("id")
-.eq("project_id",id);
+    const activityResult =
+        await db
+            .from("activities")
+            .select("id")
+            .eq(
+                "project_id",
+                id
+            );
 
 
-if(activityResult.error){
+    if(activityResult.error){
 
-alert(activityResult.error.message);
-return;
+        alert(
+            activityResult.error.message
+        );
 
-}
+        return;
 
-
-const activityIds=
-(activityResult.data||[]).map(x=>x.id);
-
-
-if(activityIds.length){
-
-const taskDelete=
-await db
-.from("tasks")
-.delete()
-.in("activity_id",activityIds);
-
-if(taskDelete.error){
-
-alert(taskDelete.error.message);
-return;
-
-}
-
-}
+    }
 
 
-const activitiesDelete=
-await db
-.from("activities")
-.delete()
-.eq("project_id",id);
-
-if(activitiesDelete.error){
-
-alert(activitiesDelete.error.message);
-return;
-
-}
+    const activityIds =
+        (activityResult.data || [])
+            .map(
+                row =>
+                    row.id
+            );
 
 
-const projectDelete=
-await db
-.from("projects")
-.delete()
-.eq("id",id);
+    if(
+        activityIds.length
+    ){
 
-if(projectDelete.error){
+        const taskDelete =
+            await db
+                .from("tasks")
+                .delete()
+                .in(
+                    "activity_id",
+                    activityIds
+                );
 
-alert(projectDelete.error.message);
-return;
 
-}
+        if(taskDelete.error){
+
+            alert(
+                taskDelete.error.message
+            );
+
+            return;
+
+        }
+
+    }
 
 
-await renderAll();
+    const activityDelete =
+        await db
+            .from("activities")
+            .delete()
+            .eq(
+                "project_id",
+                id
+            );
+
+
+    if(activityDelete.error){
+
+        alert(
+            activityDelete.error.message
+        );
+
+        return;
+
+    }
+
+
+    const projectDelete =
+        await db
+            .from("projects")
+            .delete()
+            .eq(
+                "id",
+                id
+            );
+
+
+    if(projectDelete.error){
+
+        alert(
+            projectDelete.error.message
+        );
+
+        return;
+
+    }
+
+
+    await renderAll();
 
 }
 
 
 /* =====================================================
-   ACTIVITY ADD / EDIT
-   ===================================================== */
+   ACTIVITY MODAL
+===================================================== */
 
-function openActivityModal(
-projectId,
-id=null
+async function openActivityModal(
+    projectId,
+    id = null
 ){
 
-selectedProject=projectId;
-editingActivity=id;
-
-document.getElementById(
-"activityModalTitle"
-).innerText=
-id
-?"Edit Activity"
-:"Add Activity";
+    selectedProject =
+        projectId;
 
 
-if(id){
+    editingActivity =
+        id;
 
-loadActivityForEdit(id);
+
+    document.getElementById(
+        "activityModalTitle"
+    ).innerText =
+
+        id
+        ? "Edit Activity"
+        : "Add Activity";
+
+
+    if(id){
+
+        const result =
+            await db
+                .from("activities")
+                .select("*")
+                .eq(
+                    "id",
+                    id
+                )
+                .single();
+
+
+        if(result.error){
+
+            alert(
+                result.error.message
+            );
+
+            return;
+
+        }
+
+
+        const activity =
+            result.data;
+
+
+        selectedProject =
+            activity.project_id;
+
+
+        document.getElementById(
+            "activityName"
+        ).value =
+            activity.activity_name || "";
+
+
+        document.getElementById(
+            "activityDescription"
+        ).value =
+            activity.description || "";
+
+
+        document.getElementById(
+            "activityDate"
+        ).value =
+            activity.due_date || "";
+
+
+        await populatePeopleDropdowns(
+            activity.responsible_person ||
+            "",
+            ""
+        );
+
+    }
+    else{
+
+        document.getElementById(
+            "activityName"
+        ).value = "";
+
+
+        document.getElementById(
+            "activityDescription"
+        ).value = "";
+
+
+        document.getElementById(
+            "activityDate"
+        ).value = "";
+
+
+        await populatePeopleDropdowns(
+            "",
+            ""
+        );
+
+    }
+
+
+    document.getElementById(
+        "activityModal"
+    ).classList.add("show");
 
 }
-else{
-
-document.getElementById(
-"activityName"
-).value="";
-
-document.getElementById(
-"activityDescription"
-).value="";
-
-document.getElementById(
-"activityPerson"
-).value="";
-
-document.getElementById(
-"activityDate"
-).value="";
-
-}
 
 
-document.getElementById(
-"activityModal"
-).classList.add("show");
-
-}
-
-
-async function loadActivityForEdit(id){
-
-const result=
-await db
-.from("activities")
-.select("*")
-.eq("id",id)
-.single();
-
-if(result.error){
-
-alert(result.error.message);
-return;
-
-}
-
-const data=result.data;
-
-selectedProject=data.project_id;
-
-document.getElementById(
-"activityName"
-).value=data.activity_name||"";
-
-document.getElementById(
-"activityDescription"
-).value=data.description||"";
-
-document.getElementById(
-"activityPerson"
-).value=data.responsible_person||"";
-
-document.getElementById(
-"activityDate"
-).value=data.due_date||"";
-
-}
-
+/* =====================================================
+   SAVE ACTIVITY
+===================================================== */
 
 async function saveActivity(){
 
-const activity={
-
-project_id:selectedProject,
-
-activity_name:
-document.getElementById(
-"activityName"
-).value.trim(),
-
-description:
-document.getElementById(
-"activityDescription"
-).value.trim(),
-
-responsible_person:
-document.getElementById(
-"activityPerson"
-).value.trim(),
-
-due_date:
-document.getElementById(
-"activityDate"
-).value||null
-
-};
+    let responsible =
+        document.getElementById(
+            "activityPerson"
+        ).value;
 
 
-if(!activity.activity_name){
+    if(
+        responsible ===
+        "__ADD_NEW__"
+    ){
 
-alert("Please enter activity name.");
-return;
+        alert(
+            "Please select the new person after adding them."
+        );
+
+        return;
+
+    }
+
+
+    const activity = {
+
+        project_id:
+            selectedProject,
+
+
+        activity_name:
+            document
+                .getElementById(
+                    "activityName"
+                )
+                .value
+                .trim(),
+
+
+        description:
+            document
+                .getElementById(
+                    "activityDescription"
+                )
+                .value
+                .trim(),
+
+
+        responsible_person:
+            responsible ||
+            null,
+
+
+        due_date:
+            document
+                .getElementById(
+                    "activityDate"
+                )
+                .value ||
+            null
+
+    };
+
+
+    if(
+        !activity.activity_name
+    ){
+
+        alert(
+            "Please enter activity name."
+        );
+
+        return;
+
+    }
+
+
+    let result;
+
+
+    if(editingActivity){
+
+        result =
+            await db
+                .from("activities")
+                .update(activity)
+                .eq(
+                    "id",
+                    editingActivity
+                );
+
+    }
+    else{
+
+        result =
+            await db
+                .from("activities")
+                .insert(activity);
+
+    }
+
+
+    if(result.error){
+
+        alert(
+            result.error.message
+        );
+
+        return;
+
+    }
+
+
+    closeModals();
+
+    await renderAll();
 
 }
 
 
-let result;
-
-if(editingActivity){
-
-result=
-await db
-.from("activities")
-.update(activity)
-.eq("id",editingActivity);
-
-}
-else{
-
-result=
-await db
-.from("activities")
-.insert(activity);
-
-}
-
-
-if(result.error){
-
-alert(result.error.message);
-return;
-
-}
-
-
-closeModals();
-await renderAll();
-
-}
-
+/* =====================================================
+   EDIT ACTIVITY
+===================================================== */
 
 async function editActivity(id){
 
-const result=
-await db
-.from("activities")
-.select("project_id")
-.eq("id",id)
-.single();
+    const result =
+        await db
+            .from("activities")
+            .select("project_id")
+            .eq(
+                "id",
+                id
+            )
+            .single();
 
-if(result.error){
 
-alert(result.error.message);
-return;
+    if(result.error){
+
+        alert(
+            result.error.message
+        );
+
+        return;
+
+    }
+
+
+    openActivityModal(
+        result.data.project_id,
+        id
+    );
 
 }
 
-openActivityModal(
-result.data.project_id,
-id
-);
 
-}
-
+/* =====================================================
+   DELETE ACTIVITY
+===================================================== */
 
 async function deleteActivity(id){
 
-if(!confirm(
-"Delete this activity and all its tasks?"
-)){
-return;
-}
+    if(
+        !confirm(
+            "Delete this activity and all its tasks?"
+        )
+    ){
+
+        return;
+
+    }
 
 
-const taskDelete=
-await db
-.from("tasks")
-.delete()
-.eq("activity_id",id);
-
-if(taskDelete.error){
-
-alert(taskDelete.error.message);
-return;
-
-}
+    const taskDelete =
+        await db
+            .from("tasks")
+            .delete()
+            .eq(
+                "activity_id",
+                id
+            );
 
 
-const result=
-await db
-.from("activities")
-.delete()
-.eq("id",id);
+    if(taskDelete.error){
 
-if(result.error){
+        alert(
+            taskDelete.error.message
+        );
 
-alert(result.error.message);
-return;
+        return;
 
-}
+    }
 
 
-await renderAll();
+    const activityDelete =
+        await db
+            .from("activities")
+            .delete()
+            .eq(
+                "id",
+                id
+            );
+
+
+    if(activityDelete.error){
+
+        alert(
+            activityDelete.error.message
+        );
+
+        return;
+
+    }
+
+
+    await renderAll();
 
 }
 
 
 /* =====================================================
-   TASK ADD / EDIT
-   ===================================================== */
+   TASK MODAL
+===================================================== */
 
-function openTaskModal(
-activityId,
-projectId,
-id=null
+async function openTaskModal(
+    activityId,
+    projectId,
+    id = null
 ){
 
-selectedActivity=activityId;
-selectedProject=projectId;
-editingTask=id;
-
-document.getElementById(
-"taskModalTitle"
-).innerText=
-id
-?"Edit Task"
-:"Add Task";
+    selectedActivity =
+        activityId;
 
 
-if(id){
+    selectedProject =
+        projectId;
 
-loadTaskForEdit(id);
+
+    editingTask =
+        id;
+
+
+    document.getElementById(
+        "taskModalTitle"
+    ).innerText =
+
+        id
+        ? "Edit Task"
+        : "Add Task";
+
+
+    if(id){
+
+        const result =
+            await db
+                .from("tasks")
+                .select("*")
+                .eq(
+                    "id",
+                    id
+                )
+                .single();
+
+
+        if(result.error){
+
+            alert(
+                result.error.message
+            );
+
+            return;
+
+        }
+
+
+        const task =
+            result.data;
+
+
+        selectedActivity =
+            task.activity_id;
+
+
+        selectedProject =
+            task.project_id;
+
+
+        document.getElementById(
+            "taskName"
+        ).value =
+            task.task_name || "";
+
+
+        document.getElementById(
+            "taskDate"
+        ).value =
+            task.due_date || "";
+
+
+        document.getElementById(
+            "taskStatus"
+        ).value =
+            task.status || "Pending";
+
+
+        await populatePeopleDropdowns(
+            "",
+            task.responsible_person ||
+            ""
+        );
+
+    }
+    else{
+
+        document.getElementById(
+            "taskName"
+        ).value = "";
+
+
+        document.getElementById(
+            "taskDate"
+        ).value = "";
+
+
+        document.getElementById(
+            "taskStatus"
+        ).value =
+            "Pending";
+
+
+        await populatePeopleDropdowns(
+            "",
+            ""
+        );
+
+    }
+
+
+    document.getElementById(
+        "taskModal"
+    ).classList.add("show");
 
 }
-else{
-
-document.getElementById(
-"taskName"
-).value="";
-
-document.getElementById(
-"taskPerson"
-).value="";
-
-document.getElementById(
-"taskDate"
-).value="";
-
-document.getElementById(
-"taskStatus"
-).value="Pending";
-
-}
 
 
-document.getElementById(
-"taskModal"
-).classList.add("show");
-
-}
-
-
-async function loadTaskForEdit(id){
-
-const result=
-await db
-.from("tasks")
-.select("*")
-.eq("id",id)
-.single();
-
-if(result.error){
-
-alert(result.error.message);
-return;
-
-}
-
-const data=result.data;
-
-selectedActivity=data.activity_id;
-selectedProject=data.project_id;
-
-document.getElementById(
-"taskName"
-).value=data.task_name||"";
-
-document.getElementById(
-"taskPerson"
-).value=data.responsible_person||"";
-
-document.getElementById(
-"taskDate"
-).value=data.due_date||"";
-
-document.getElementById(
-"taskStatus"
-).value=data.status||"Pending";
-
-}
-
+/* =====================================================
+   SAVE TASK
+===================================================== */
 
 async function saveTask(){
 
-const task={
-
-project_id:selectedProject,
-
-activity_id:selectedActivity,
-
-task_name:
-document.getElementById(
-"taskName"
-).value.trim(),
-
-responsible_person:
-document.getElementById(
-"taskPerson"
-).value.trim(),
-
-due_date:
-document.getElementById(
-"taskDate"
-).value||null,
-
-status:
-document.getElementById(
-"taskStatus"
-).value
-
-};
+    const responsible =
+        document
+            .getElementById(
+                "taskPerson"
+            )
+            .value;
 
 
-if(!task.task_name){
+    if(
+        responsible ===
+        "__ADD_NEW__"
+    ){
 
-alert("Please enter task name.");
-return;
+        alert(
+            "Please select the new person after adding them."
+        );
+
+        return;
+
+    }
+
+
+    const task = {
+
+        project_id:
+            selectedProject,
+
+
+        activity_id:
+            selectedActivity,
+
+
+        task_name:
+            document
+                .getElementById(
+                    "taskName"
+                )
+                .value
+                .trim(),
+
+
+        responsible_person:
+            responsible ||
+            null,
+
+
+        due_date:
+            document
+                .getElementById(
+                    "taskDate"
+                )
+                .value ||
+            null,
+
+
+        status:
+            document
+                .getElementById(
+                    "taskStatus"
+                )
+                .value
+
+    };
+
+
+    if(
+        !task.task_name
+    ){
+
+        alert(
+            "Please enter task name."
+        );
+
+        return;
+
+    }
+
+
+    let result;
+
+
+    if(editingTask){
+
+        result =
+            await db
+                .from("tasks")
+                .update(task)
+                .eq(
+                    "id",
+                    editingTask
+                );
+
+    }
+    else{
+
+        result =
+            await db
+                .from("tasks")
+                .insert(task);
+
+    }
+
+
+    if(result.error){
+
+        alert(
+            result.error.message
+        );
+
+        return;
+
+    }
+
+
+    closeModals();
+
+    await renderAll();
 
 }
 
 
-let result;
-
-if(editingTask){
-
-result=
-await db
-.from("tasks")
-.update(task)
-.eq("id",editingTask);
-
-}
-else{
-
-result=
-await db
-.from("tasks")
-.insert(task);
-
-}
-
-
-if(result.error){
-
-alert(result.error.message);
-return;
-
-}
-
-
-closeModals();
-await renderAll();
-
-}
-
+/* =====================================================
+   EDIT TASK
+===================================================== */
 
 async function editTask(id){
 
-const result=
-await db
-.from("tasks")
-.select("*")
-.eq("id",id)
-.single();
+    const result =
+        await db
+            .from("tasks")
+            .select("*")
+            .eq(
+                "id",
+                id
+            )
+            .single();
 
-if(result.error){
 
-alert(result.error.message);
-return;
+    if(result.error){
+
+        alert(
+            result.error.message
+        );
+
+        return;
+
+    }
+
+
+    const task =
+        result.data;
+
+
+    openTaskModal(
+        task.activity_id,
+        task.project_id,
+        id
+    );
 
 }
 
-const data=result.data;
 
-openTaskModal(
-data.activity_id,
-data.project_id,
-id
-);
-
-}
-
+/* =====================================================
+   DELETE TASK
+===================================================== */
 
 async function deleteTask(id){
 
-if(!confirm("Delete this task?")){
-return;
-}
+    if(
+        !confirm(
+            "Delete this task?"
+        )
+    ){
 
-const result=
-await db
-.from("tasks")
-.delete()
-.eq("id",id);
+        return;
 
-if(result.error){
-
-alert(result.error.message);
-return;
-
-}
-
-await renderAll();
-
-}
+    }
 
 
-async function quickComplete(
-id,
-checked
-){
+    const result =
+        await db
+            .from("tasks")
+            .delete()
+            .eq(
+                "id",
+                id
+            );
 
-const result=
-await db
-.from("tasks")
-.update({
-status:
-checked
-?"Completed"
-:"Pending"
-})
-.eq("id",id);
 
-if(result.error){
+    if(result.error){
 
-alert(result.error.message);
-return;
+        alert(
+            result.error.message
+        );
 
-}
+        return;
 
-await renderAll();
+    }
+
+
+    await renderAll();
 
 }
 
 
 /* =====================================================
-   MODAL
-   ===================================================== */
+   QUICK COMPLETE
+===================================================== */
+
+async function quickComplete(
+    id,
+    checked
+){
+
+    const result =
+        await db
+            .from("tasks")
+            .update({
+
+                status:
+                    checked
+                    ? "Completed"
+                    : "Pending"
+
+            })
+            .eq(
+                "id",
+                id
+            );
+
+
+    if(result.error){
+
+        alert(
+            result.error.message
+        );
+
+        return;
+
+    }
+
+
+    await renderAll();
+
+}
+
+
+/* =====================================================
+   CLOSE MODALS
+===================================================== */
 
 function closeModals(){
 
-document
-.querySelectorAll(".modal")
-.forEach(
-m=>m.classList.remove("show")
-);
-
-editingProject=null;
-editingActivity=null;
-editingTask=null;
-
-}
+    document
+        .querySelectorAll(".modal")
+        .forEach(
+            modal =>
+                modal.classList.remove(
+                    "show"
+                )
+        );
 
 
-/* =====================================================
-   SECURITY / DISPLAY
-   ===================================================== */
+    editingProject = null;
 
-function escapeHtml(value){
+    editingActivity = null;
 
-return String(value??"")
-.replaceAll("&","&amp;")
-.replaceAll("<","&lt;")
-.replaceAll(">","&gt;")
-.replaceAll('"',"&quot;")
-.replaceAll("'","&#039;");
-
-}
-
-function escapeAttr(value){
-
-return escapeHtml(value);
+    editingTask = null;
 
 }
 
 
 /* =====================================================
-   REFRESH
-   ===================================================== */
+   ESCAPE HTML
+===================================================== */
+
+function escapeHtml(
+    value
+){
+
+    return String(
+        value ?? ""
+    )
+    .replaceAll(
+        "&",
+        "&amp;"
+    )
+    .replaceAll(
+        "<",
+        "&lt;"
+    )
+    .replaceAll(
+        ">",
+        "&gt;"
+    )
+    .replaceAll(
+        '"',
+        "&quot;"
+    )
+    .replaceAll(
+        "'",
+        "&#039;"
+    );
+
+}
+
+
+function escapeAttr(
+    value
+){
+
+    return escapeHtml(
+        value
+    );
+
+}
+
+
+/* =====================================================
+   EXPORT TO EXCEL
+===================================================== */
+
+async function exportToExcel(){
+
+    const data =
+        await loadData();
+
+
+    const rows = [];
+
+
+    data.projects.forEach(
+        project => {
+
+
+            const projectActivities =
+                data.activities.filter(
+                    activity =>
+                        activity.project_id ===
+                        project.id
+                );
+
+
+            const projectProgress =
+                calculateProjectProgress(
+                    project.id,
+                    data.activities,
+                    data.tasks
+                );
+
+
+            const activityWeight =
+                projectActivities.length
+
+                ?
+
+                100 /
+                projectActivities.length
+
+                :
+
+                0;
+
+
+            projectActivities.forEach(
+                activity => {
+
+
+                    const activityTasks =
+                        data.tasks.filter(
+                            task =>
+                                task.activity_id ===
+                                activity.id
+                        );
+
+
+                    const taskWeight =
+                        activityTasks.length
+
+                        ?
+
+                        activityWeight /
+                        activityTasks.length
+
+                        :
+
+                        0;
+
+
+                    if(
+                        activityTasks.length ===
+                        0
+                    ){
+
+                        rows.push({
+
+                            "Project":
+                                project.project_name,
+
+                            "Project Owner":
+                                project.project_owner || "",
+
+                            "Project Status":
+                                project.status ||
+                                "Pending",
+
+                            "Project Progress %":
+                                Number(
+                                    projectProgress.toFixed(2)
+                                ),
+
+                            "Activity":
+                                activity.activity_name,
+
+                            "Activity Responsible":
+                                activity.responsible_person ||
+                                "",
+
+                            "Activity Weight %":
+                                Number(
+                                    activityWeight.toFixed(2)
+                                ),
+
+                            "Task":
+                                "",
+
+                            "Responsible Person":
+                                "",
+
+                            "Due Date":
+                                activity.due_date ||
+                                "",
+
+                            "Task Status":
+                                "",
+
+                            "Task Weight %":
+                                0
+
+                        });
+
+                    }
+
+
+                    activityTasks.forEach(
+                        task => {
+
+
+                            rows.push({
+
+                                "Project":
+                                    project.project_name,
+
+                                "Project Owner":
+                                    project.project_owner ||
+                                    "",
+
+                                "Project Status":
+                                    project.status ||
+                                    "Pending",
+
+                                "Project Progress %":
+                                    Number(
+                                        projectProgress.toFixed(2)
+                                    ),
+
+                                "Activity":
+                                    activity.activity_name,
+
+                                "Activity Responsible":
+                                    activity.responsible_person ||
+                                    "",
+
+                                "Activity Weight %":
+                                    Number(
+                                        activityWeight.toFixed(2)
+                                    ),
+
+                                "Task":
+                                    task.task_name,
+
+                                "Responsible Person":
+                                    task.responsible_person ||
+                                    "",
+
+                                "Due Date":
+                                    task.due_date ||
+                                    "",
+
+                                "Task Status":
+                                    getTaskStatus(task),
+
+                                "Task Weight %":
+                                    Number(
+                                        taskWeight.toFixed(2)
+                                    )
+
+                            });
+
+                        }
+                    );
+
+                }
+            );
+
+        }
+    );
+
+
+    if(
+        rows.length === 0
+    ){
+
+        alert(
+            "There is no project data to export."
+        );
+
+        return;
+
+    }
+
+
+    const worksheet =
+        XLSX.utils.json_to_sheet(
+            rows
+        );
+
+
+    worksheet["!cols"] = [
+
+        {wch:25},
+        {wch:20},
+        {wch:15},
+        {wch:18},
+        {wch:25},
+        {wch:20},
+        {wch:18},
+        {wch:35},
+        {wch:20},
+        {wch:15},
+        {wch:15},
+        {wch:18}
+
+    ];
+
+
+    const workbook =
+        XLSX.utils.book_new();
+
+
+    XLSX.utils.book_append_sheet(
+        workbook,
+        worksheet,
+        "Project Tracker"
+    );
+
+
+    XLSX.writeFile(
+        workbook,
+        "Team_Project_Tracker.xlsx"
+    );
+
+}
+
+
+/* =====================================================
+   RENDER EVERYTHING
+===================================================== */
 
 async function renderAll(){
 
-try{
+    try{
 
-await renderDashboard();
-await renderProjects();
-await renderPeople();
-await renderTasks();
+        await renderDashboard();
 
-}
-catch(error){
+        await renderProjects();
 
-console.error(error);
+        await renderPeople();
 
-alert(
-"Unable to load the database: "+
-error.message
-);
+        await renderTasks();
 
-}
+    }
+    catch(error){
+
+        console.error(
+            error
+        );
+
+
+        alert(
+            "Unable to load the database: " +
+            error.message
+        );
+
+    }
 
 }
 
 
 /* =====================================================
    START
-   ===================================================== */
+===================================================== */
 
 renderAll();
 
 </script>
 
 </body>
+
 </html>
