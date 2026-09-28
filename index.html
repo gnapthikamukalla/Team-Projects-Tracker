@@ -611,6 +611,73 @@ td {
 }
 
 /* =========================
+   APPLY TO PROJECTS PICKER
+========================= */
+
+.apply-select-all {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 10px 12px;
+    background: #f8fafc;
+    border: 1px solid #e2e8f0;
+    border-radius: 8px;
+    margin-bottom: 10px;
+    font-weight: bold;
+    font-size: 14px;
+    cursor: pointer;
+}
+
+.apply-project-list {
+    border: 1px solid #e2e8f0;
+    border-radius: 8px;
+    max-height: 320px;
+    overflow-y: auto;
+}
+
+.apply-project-item {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 10px 12px;
+    border-bottom: 1px solid #edf0f4;
+    cursor: pointer;
+    font-size: 14px;
+}
+
+.apply-project-item:last-child {
+    border-bottom: none;
+}
+
+.apply-project-item:hover {
+    background: #f8fafc;
+}
+
+.apply-project-item.disabled {
+    color: #94a3b8;
+    cursor: not-allowed;
+    background: #fafbfc;
+}
+
+.apply-project-item input,
+.apply-select-all input {
+    width: 16px;
+    height: 16px;
+    margin: 0;
+}
+
+.apply-project-owner {
+    color: #64748b;
+    font-size: 12px;
+}
+
+.apply-note {
+    color: #64748b;
+    font-size: 13px;
+    margin-top: 0;
+}
+
+/* =========================
    RESPONSIVE
 ========================= */
 
@@ -1299,6 +1366,72 @@ td {
                 onclick="saveTask()"
             >
                 Save Task
+            </button>
+
+        </div>
+
+    </div>
+
+</div>
+
+
+<!-- =========================================================
+     APPLY ACTIVITY TO PROJECTS MODAL
+========================================================= -->
+
+<div
+    id="applyModal"
+    class="modal-overlay"
+>
+
+    <div class="modal">
+
+        <h2 id="applyModalTitle">
+            Apply Activity to Projects
+        </h2>
+
+        <p
+            id="applyModalNote"
+            class="apply-note"
+        ></p>
+
+        <input
+            type="hidden"
+            id="applyActivityId"
+        >
+
+        <label class="apply-select-all">
+
+            <input
+                type="checkbox"
+                id="applySelectAll"
+                onchange="toggleApplySelectAll(this.checked)"
+            >
+
+            Select All
+
+        </label>
+
+        <div
+            id="applyProjectList"
+            class="apply-project-list"
+        ></div>
+
+        <div class="form-buttons">
+
+            <button
+                class="btn btn-secondary"
+                onclick="closeModal('applyModal')"
+            >
+                Cancel
+            </button>
+
+            <button
+                id="applyConfirmBtn"
+                class="btn btn-primary"
+                onclick="confirmApplyActivity()"
+            >
+                Apply to Selected
             </button>
 
         </div>
@@ -2340,19 +2473,42 @@ function renderActivity(
 
 
 /* =========================================================
-   APPLY ACTIVITY TO ALL PROJECTS
+   APPLY ACTIVITY TO SELECTED PROJECTS
 =========================================================
 
-   Copies the selected activity (and its tasks) into
-   every other project.
+   Clicking "Apply to All" opens a window listing the
+   other projects. Tick the projects you want, then
+   click "Apply to Selected".
 
    - Projects that already have an activity with the
-     same name are skipped (no duplicates).
+     same name are shown greyed out (no duplicates).
    - Copied tasks start as "Pending".
    - Responsible person = that project's owner.
 ========================================================= */
 
-async function applyActivityToAll(activityId) {
+function activityNameKey(name) {
+
+    return String(name || "")
+        .trim()
+        .toLowerCase();
+
+}
+
+
+function projectHasActivity(projectId, name) {
+
+    const key =
+        activityNameKey(name);
+
+    return activities.some(a =>
+        a.project_id === projectId &&
+        activityNameKey(a.activity_name) === key
+    );
+
+}
+
+
+function applyActivityToAll(activityId) {
 
     const source =
         activities.find(
@@ -2378,60 +2534,202 @@ async function applyActivityToAll(activityId) {
     }
 
 
-    const sourceName =
-        String(source.activity_name || "")
-            .trim()
-            .toLowerCase();
-
-
-    const targetProjects =
-        otherProjects.filter(project =>
-            !activities.some(a =>
-                a.project_id === project.id &&
-                String(a.activity_name || "")
-                    .trim()
-                    .toLowerCase() === sourceName
-            )
-        );
-
-    if (targetProjects.length === 0) {
-
-        alert(
-            "All other projects already have the activity \""
-            + source.activity_name
-            + "\"."
-        );
-
-        return;
-    }
-
-
     const sourceTasks =
         tasks.filter(
             t => t.activity_id === source.id
         );
 
 
-    const skipped =
-        otherProjects.length -
-        targetProjects.length;
+    document.getElementById(
+        "applyActivityId"
+    ).value =
+        source.id;
 
-    if (
-        !confirm(
-            "Apply \"" + source.activity_name + "\""
-            + " and its " + sourceTasks.length
-            + " task(s) to " + targetProjects.length
-            + " other project(s)?"
-            + (
-                skipped > 0
-                ? "\n\n" + skipped
-                  + " project(s) already have this activity and will be skipped."
-                : ""
-            )
+    document.getElementById(
+        "applyModalTitle"
+    ).textContent =
+        "Apply \"" + source.activity_name + "\"";
+
+    document.getElementById(
+        "applyModalNote"
+    ).textContent =
+        "Choose the projects to copy this activity and its "
+        + sourceTasks.length
+        + " task(s) to. Greyed-out projects already have this activity.";
+
+
+    const list =
+        document.getElementById(
+            "applyProjectList"
+        );
+
+    list.innerHTML = "";
+
+
+    otherProjects.forEach(project => {
+
+        const exists =
+            projectHasActivity(
+                project.id,
+                source.activity_name
+            );
+
+        const item =
+            document.createElement("label");
+
+        item.className =
+            "apply-project-item"
+            + (exists ? " disabled" : "");
+
+        item.innerHTML = `
+
+            <input
+                type="checkbox"
+                class="apply-project-checkbox"
+                value="${escapeHtml(project.id)}"
+                ${exists ? "disabled" : ""}
+                onchange="updateApplySelectAll()"
+            >
+
+            <div>
+
+                <div>
+                    ${escapeHtml(project.project_name)}
+                    ${exists ? " (already added)" : ""}
+                </div>
+
+                <div class="apply-project-owner">
+                    Owner:
+                    ${escapeHtml(project.project_owner || "-")}
+                </div>
+
+            </div>
+
+        `;
+
+        list.appendChild(item);
+
+    });
+
+
+    document.getElementById(
+        "applySelectAll"
+    ).checked = false;
+
+    document.getElementById(
+        "applySelectAll"
+    ).disabled =
+        !list.querySelector(
+            ".apply-project-checkbox:not(:disabled)"
+        );
+
+    document.getElementById(
+        "applyConfirmBtn"
+    ).disabled = false;
+
+
+    document.getElementById(
+        "applyModal"
+    ).classList.add("show");
+
+}
+
+
+function toggleApplySelectAll(checked) {
+
+    document
+        .querySelectorAll(
+            "#applyProjectList .apply-project-checkbox:not(:disabled)"
         )
-    ) {
+        .forEach(cb => {
+            cb.checked = checked;
+        });
+
+}
+
+
+function updateApplySelectAll() {
+
+    const enabled =
+        [
+            ...document.querySelectorAll(
+                "#applyProjectList .apply-project-checkbox:not(:disabled)"
+            )
+        ];
+
+    document.getElementById(
+        "applySelectAll"
+    ).checked =
+        enabled.length > 0 &&
+        enabled.every(cb => cb.checked);
+
+}
+
+
+async function confirmApplyActivity() {
+
+    const source =
+        activities.find(
+            a =>
+                a.id ===
+                document.getElementById(
+                    "applyActivityId"
+                ).value
+        );
+
+    if (!source) {
+
+        closeModal("applyModal");
+
         return;
     }
+
+
+    const selectedIds =
+        [
+            ...document.querySelectorAll(
+                "#applyProjectList .apply-project-checkbox:checked"
+            )
+        ].map(cb => cb.value);
+
+
+    /*
+       Safety check: skip any project that already
+       has this activity (no duplicates).
+    */
+
+    const targetProjects =
+        projects.filter(project =>
+            selectedIds.includes(String(project.id)) &&
+            !projectHasActivity(
+                project.id,
+                source.activity_name
+            )
+        );
+
+
+    if (targetProjects.length === 0) {
+
+        alert(
+            "Please select at least one project."
+        );
+
+        return;
+    }
+
+
+    const confirmBtn =
+        document.getElementById(
+            "applyConfirmBtn"
+        );
+
+    confirmBtn.disabled = true;
+
+
+    const sourceTasks =
+        tasks.filter(
+            t => t.activity_id === source.id
+        );
 
 
     const newActivities =
@@ -2469,6 +2767,8 @@ async function applyActivityToAll(activityId) {
 
 
     if (activityResult.error) {
+
+        confirmBtn.disabled = false;
 
         alert(
             "Unable to apply activity:\n"
@@ -2525,6 +2825,8 @@ async function applyActivityToAll(activityId) {
 
         if (taskResult.error) {
 
+            closeModal("applyModal");
+
             alert(
                 "Activity was added, but tasks could not be copied:\n"
                 + taskResult.error.message
@@ -2537,6 +2839,8 @@ async function applyActivityToAll(activityId) {
 
     }
 
+
+    closeModal("applyModal");
 
     alert(
         "\"" + source.activity_name + "\""
