@@ -2182,6 +2182,13 @@ function renderActivity(
                 </button>
 
                 <button
+                    class="btn btn-success btn-small"
+                    onclick="applyActivityToAll('${activity.id}')"
+                >
+                    Apply to All
+                </button>
+
+                <button
                     class="btn btn-primary btn-small"
                     onclick="openTaskModal(
                         '${activity.project_id}',
@@ -2328,6 +2335,216 @@ function renderActivity(
         taskContainer.appendChild(row);
 
     });
+
+}
+
+
+/* =========================================================
+   APPLY ACTIVITY TO ALL PROJECTS
+=========================================================
+
+   Copies the selected activity (and its tasks) into
+   every other project.
+
+   - Projects that already have an activity with the
+     same name are skipped (no duplicates).
+   - Copied tasks start as "Pending".
+   - Responsible person = that project's owner.
+========================================================= */
+
+async function applyActivityToAll(activityId) {
+
+    const source =
+        activities.find(
+            a => a.id === activityId
+        );
+
+    if (!source)
+        return;
+
+
+    const otherProjects =
+        projects.filter(
+            p => p.id !== source.project_id
+        );
+
+    if (otherProjects.length === 0) {
+
+        alert(
+            "There are no other projects to apply this activity to."
+        );
+
+        return;
+    }
+
+
+    const sourceName =
+        String(source.activity_name || "")
+            .trim()
+            .toLowerCase();
+
+
+    const targetProjects =
+        otherProjects.filter(project =>
+            !activities.some(a =>
+                a.project_id === project.id &&
+                String(a.activity_name || "")
+                    .trim()
+                    .toLowerCase() === sourceName
+            )
+        );
+
+    if (targetProjects.length === 0) {
+
+        alert(
+            "All other projects already have the activity \""
+            + source.activity_name
+            + "\"."
+        );
+
+        return;
+    }
+
+
+    const sourceTasks =
+        tasks.filter(
+            t => t.activity_id === source.id
+        );
+
+
+    const skipped =
+        otherProjects.length -
+        targetProjects.length;
+
+    if (
+        !confirm(
+            "Apply \"" + source.activity_name + "\""
+            + " and its " + sourceTasks.length
+            + " task(s) to " + targetProjects.length
+            + " other project(s)?"
+            + (
+                skipped > 0
+                ? "\n\n" + skipped
+                  + " project(s) already have this activity and will be skipped."
+                : ""
+            )
+        )
+    ) {
+        return;
+    }
+
+
+    const newActivities =
+        targetProjects.map(project => ({
+
+            project_id:
+                project.id,
+
+            activity_name:
+                source.activity_name,
+
+            description:
+                source.description,
+
+            /*
+               Responsible person = that project's owner.
+               If the project has no owner, keep the
+               original activity's responsible person.
+            */
+            responsible_person:
+                (project.project_owner || "").trim()
+                || source.responsible_person,
+
+            due_date:
+                source.due_date
+
+        }));
+
+
+    const activityResult =
+        await supabaseClient
+            .from("activities")
+            .insert(newActivities)
+            .select();
+
+
+    if (activityResult.error) {
+
+        alert(
+            "Unable to apply activity:\n"
+            + activityResult.error.message
+        );
+
+        return;
+    }
+
+
+    if (sourceTasks.length > 0) {
+
+        const newTasks = [];
+
+        (activityResult.data || []).forEach(
+            newActivity => {
+
+                sourceTasks.forEach(task => {
+
+                    newTasks.push({
+
+                        project_id:
+                            newActivity.project_id,
+
+                        activity_id:
+                            newActivity.id,
+
+                        task_name:
+                            task.task_name,
+
+                        responsible_person:
+                            newActivity.responsible_person
+                            || task.responsible_person,
+
+                        due_date:
+                            task.due_date,
+
+                        status:
+                            "Pending"
+
+                    });
+
+                });
+
+            }
+        );
+
+
+        const taskResult =
+            await supabaseClient
+                .from("tasks")
+                .insert(newTasks);
+
+
+        if (taskResult.error) {
+
+            alert(
+                "Activity was added, but tasks could not be copied:\n"
+                + taskResult.error.message
+            );
+
+            await refreshData();
+
+            return;
+        }
+
+    }
+
+
+    alert(
+        "\"" + source.activity_name + "\""
+        + " applied to " + targetProjects.length
+        + " project(s)."
+    );
+
+    await refreshData();
 
 }
 
@@ -3257,7 +3474,7 @@ function getTaskStatus(task) {
     if (
         task.due_date
         &&
-        task.due_date <
+        task.due_date 
         getToday()
     ) {
         return "overdue";
