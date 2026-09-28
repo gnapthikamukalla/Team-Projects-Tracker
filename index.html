@@ -3778,7 +3778,7 @@ function getTaskStatus(task) {
     if (
         task.due_date
         &&
-        task.due_date 
+        task.due_date <
         getToday()
     ) {
         return "overdue";
